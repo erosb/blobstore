@@ -41,7 +41,7 @@
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
 		<org.everit.serviceutil.version>0.6.0</org.everit.serviceutil.version>
-		<org.everit.util.version>0.7.0</org.everit.util.version>
+		<org.everit.util.version>0.8.0-SNAPSHOT</org.everit.util.version>
 	</properties>
 
 	<scm>

@@ -19,7 +19,7 @@ package org.everit.blobstore.internal.cache;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import org.everit.util.core.filter.Interval;
+import org.everit.util.core.filter.Range;
 
 public class FragmentPart implements Serializable {
 
@@ -39,9 +39,9 @@ public class FragmentPart implements Serializable {
 		this.data = data;
 	}
 
-	public Interval<Long> asInterval() {
-		return new Interval<Long>(startPositionInFragment,
-				startPositionInFragment + data.length, true, false);
+	public Range<Long> asRange() {
+		return new Range<Long>(startPositionInFragment, startPositionInFragment
+				+ data.length, true, false);
 	}
 
 	@Override
