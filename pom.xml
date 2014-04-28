@@ -44,6 +44,7 @@
     <modules>
         <module>base</module>
         <module>postgres</module>
-        <!-- <module>jdbc</module> -->
+        <module>jdbc</module>
     </modules>
+    
 </project>
