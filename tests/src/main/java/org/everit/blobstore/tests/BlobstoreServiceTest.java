@@ -1,0 +1,57 @@
+/**
+ * This file is part of Everit - Blobstore Tests.
+ *
+ * Everit - Blobstore Tests is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Everit - Blobstore Tests is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Everit - Blobstore Tests.  If not, see <http://www.gnu.org/licenses/>.
+ */
+package org.everit.blobstore.tests;
+
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Service;
+import org.everit.blobstore.api.BlobstoreService;
+import org.everit.osgi.dev.testrunner.TestDuringDevelopment;
+import org.junit.Assert;
+import org.junit.Test;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
+@Component(name = "BlobstoreServiceTest", immediate = true)
+@Service(value = BlobstoreServiceTest.class)
+@Properties({
+    @Property(name = "eosgi.testEngine", value = "junit4"),
+    @Property(name = "eosgi.testId", value = "blobstoreTest"),
+})
+public class BlobstoreServiceTest {
+
+    private static final Logger LOGGER = LoggerFactory.getLogger(BlobstoreServiceTest.class);
+
+    private BlobstoreService blobstoreService;
+
+    public BlobstoreService getBlobstoreService() {
+        return blobstoreService;
+    }
+
+    public void setBlobstoreService(final BlobstoreService blobstoreService) {
+        this.blobstoreService = blobstoreService;
+    }
+
+    @Test
+    @TestDuringDevelopment
+    public void testBlobSize() {
+        Assert.assertNotNull(blobstoreService);
+        System.out.println("testBlobSize() running!");
+    }
+
+}
