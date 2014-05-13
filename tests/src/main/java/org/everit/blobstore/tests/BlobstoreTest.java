@@ -25,34 +25,41 @@ import org.everit.blobstore.api.Blobstore;
 import org.everit.osgi.dev.testrunner.TestDuringDevelopment;
 import org.junit.Assert;
 import org.junit.Test;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.osgi.service.log.LogService;
 
 @Component(name = "BlobstoreTest", immediate = true)
 @Service(value = BlobstoreTest.class)
 @Properties({
-        @Property(name = "eosgi.testEngine", value = "junit4"),
-        @Property(name = "eosgi.testId", value = "blobstoreTest"),
+    @Property(name = "eosgi.testEngine", value = "junit4"),
+    @Property(name = "eosgi.testId", value = "blobstoreTest"),
 })
 public class BlobstoreTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlobstoreTest.class);
-
     @Reference
+    private LogService log;
+
     private Blobstore blobstore;
 
     public void bindBlobstore(final Blobstore blobstore) {
         this.blobstore = blobstore;
     }
 
+    public void bindLog(final LogService log) {
+        this.log = log;
+    }
+
     public Blobstore getBlobstore() {
         return blobstore;
+    }
+
+    public LogService getLog() {
+        return log;
     }
 
     @Test
     @TestDuringDevelopment
     public void testBlobSize() {
-        Assert.assertNotNull(blobstore);
+        Assert.assertNotNull(log);
         System.out.println("testBlobSize() running!");
     }
 

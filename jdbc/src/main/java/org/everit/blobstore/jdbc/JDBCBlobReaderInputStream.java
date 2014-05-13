@@ -50,11 +50,6 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
     private Connection connection;
 
     /**
-     * The connection provider to get database connections.
-     */
-    private DataSource dataSource = null;
-
-    /**
      * The {@link InputStream} for the {@link Blob}.
      */
     private InputStream binaryStream = null;
@@ -90,7 +85,7 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
             final Long startPosition)
                     throws SQLException {
         super(blobId, startPosition);
-        this.dataSource = dataSource;
+        this.connection = dataSource.getConnection();
         try {
             Blob lBlob = getBlob();
             if (lBlob == null) {

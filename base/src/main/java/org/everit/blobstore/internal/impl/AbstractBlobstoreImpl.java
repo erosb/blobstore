@@ -41,7 +41,7 @@ public abstract class AbstractBlobstoreImpl implements Blobstore {
      * Logger for this class.
      */
     @Reference
-    private LogService LOGGER;
+    private LogService logger;
 
     /**
      * Default buffer size.

@@ -200,9 +200,9 @@ public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
             }
             return Long.valueOf(lastKey);
         } catch (SQLException e) {
-            throw new RuntimeException(e);
+            throw new BlobstoreException(e);
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new BlobstoreException(e);
         } finally {
             try {
                 try {
@@ -215,7 +215,7 @@ public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
                     }
                 }
             } catch (SQLException e) {
-                throw new RuntimeException(e);
+                throw new BlobstoreException(e);
             } finally {
                 cleanup(connection, binaryStream);
             }
