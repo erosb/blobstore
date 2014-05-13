@@ -19,8 +19,9 @@ package org.everit.blobstore.tests;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.everit.blobstore.api.BlobstoreService;
+import org.everit.blobstore.api.Blobstore;
 import org.everit.osgi.dev.testrunner.TestDuringDevelopment;
 import org.junit.Assert;
 import org.junit.Test;
@@ -28,23 +29,24 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 @Component(name = "BlobstoreServiceTest", immediate = true)
-@Service(value = BlobstoreServiceTest.class)
+@Service(value = BlobstoreTest.class)
 @Properties({
     @Property(name = "eosgi.testEngine", value = "junit4"),
     @Property(name = "eosgi.testId", value = "blobstoreTest"),
 })
-public class BlobstoreServiceTest {
+public class BlobstoreTest {
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlobstoreServiceTest.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(BlobstoreTest.class);
 
-    private BlobstoreService blobstoreService;
+    @Reference
+    private Blobstore blobstoreService;
 
-    public BlobstoreService getBlobstoreService() {
-        return blobstoreService;
+    public void bindBlobstoreService(final Blobstore blobstoreService) {
+        this.blobstoreService = blobstoreService;
     }
 
-    public void setBlobstoreService(final BlobstoreService blobstoreService) {
-        this.blobstoreService = blobstoreService;
+    public Blobstore getBlobstoreService() {
+        return blobstoreService;
     }
 
     @Test

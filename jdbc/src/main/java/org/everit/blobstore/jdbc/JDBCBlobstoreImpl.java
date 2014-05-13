@@ -26,22 +26,18 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 import javax.sql.DataSource;
-import javax.sql.XADataSource;
 
 import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.api.ErrorCode;
-import org.everit.blobstore.internal.api.ConnectionProvider;
 import org.everit.blobstore.internal.cache.BlobstoreCacheService;
 import org.everit.blobstore.internal.impl.AbstractBlobReaderInputStream;
-import org.everit.blobstore.internal.impl.AbstractBlobstoreServiceImpl;
+import org.everit.blobstore.internal.impl.AbstractBlobstoreImpl;
 import org.everit.blobstore.internal.impl.StreamUtil;
-import org.everit.serviceutil.api.exception.Param;
 
 /**
- * JDBC specific implementation of {@link org.everit.blobstore.api.BlobstoreService}. This implementation handles a
+ * JDBC specific implementation of {@link org.everit.blobstore.api.Blobstore}. This implementation handles a
  * cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
-public class JDBCBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
+public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
 
     /**
      * Name of the table the blob is stored.
@@ -80,7 +76,7 @@ public class JDBCBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
 
     /**
      * Simple constructor that does nothing else but calls the constructor of the superclass.
-     * 
+     *
      * @param dataSource
      *            See the constructor of the superclass.
      * @param xaDataSource
@@ -88,14 +84,13 @@ public class JDBCBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
      * @param blobstoreCacheService
      *            See the constructor of the superclass.
      */
-    public JDBCBlobstoreServiceImpl(final DataSource dataSource, final XADataSource xaDataSource,
-            final BlobstoreCacheService blobstoreCacheService) {
-        super(dataSource, xaDataSource, blobstoreCacheService);
+    public JDBCBlobstoreImpl(final DataSource dataSource, final BlobstoreCacheService blobstoreCacheService) {
+        super(dataSource, blobstoreCacheService);
     }
 
     /**
      * Cleanup method for closing the connection and the large object handler.
-     * 
+     *
      * @param connection
      *            The connection to be closed.
      * @param binaryStream
@@ -107,40 +102,36 @@ public class JDBCBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
                 binaryStream.close();
             }
         } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new BlobstoreException(e);
         } finally {
             if (connection != null) {
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    LOGGER.error(e.getMessage(), e);
-                    throw new RuntimeException(e);
+                    throw new BlobstoreException(e);
                 }
             }
         }
     }
 
     @Override
-    protected AbstractBlobReaderInputStream createBlobInputStream(final ConnectionProvider connectionProvider,
-            final long blobId,
+    protected AbstractBlobReaderInputStream createBlobInputStream(final long blobId,
             final long startPosition) throws SQLException {
-        return new JDBCBlobReaderInputStream(connectionProvider, blobId, startPosition);
+        return new JDBCBlobReaderInputStream(getDataSource(), blobId, startPosition);
     }
 
     @Override
     public void deleteBlob(final long blobId) {
         Connection connection = null;
         try {
-            connection = getConnectionProvider().getConnection();
+            connection = getConnection();
             PreparedStatement preparedStatement = connection
                     .prepareStatement("DELETE FROM " + TABLE_NAME + " WHERE " + COLUMN_BLOB_ID + " = ?");
             preparedStatement.setLong(1, blobId);
             preparedStatement.executeUpdate();
             preparedStatement.close();
         } catch (SQLException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new BlobstoreException(e);
         } finally {
             cleanup(connection, null);
         }
@@ -151,7 +142,7 @@ public class JDBCBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            connection = getConnectionProvider().getConnection();
+            connection = getConnection();
             preparedStatement = connection.prepareStatement(SQL_QUERY_DESCRIPTION);
             preparedStatement.setLong(1, blobId);
 
@@ -160,10 +151,10 @@ public class JDBCBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
             if (resultSet.next()) {
                 return resultSet.getString(1);
             } else {
-                throw new BlobstoreException(ErrorCode.BLOB_DOES_NOT_EXIST, new Param(blobId));
+                throw new BlobstoreException("blob [" + blobId + "] does not exist");
             }
         } catch (SQLException e) {
-            throw new BlobstoreException(ErrorCode.SQL_EXCEPTION, e);
+            throw new BlobstoreException(e);
         } finally {
 
             try {
@@ -177,7 +168,7 @@ public class JDBCBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
                     }
                 }
             } catch (SQLException e) {
-                throw new BlobstoreException(ErrorCode.SQL_EXCEPTION, e);
+                throw new BlobstoreException(e);
             }
         }
     }
@@ -189,14 +180,14 @@ public class JDBCBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
         PreparedStatement preparedStatement = null;
         ResultSet keyset = null;
         try {
-            connection = getConnectionProvider().getConnection();
+            connection = getConnection();
             preparedStatement = connection.prepareStatement(SQL_INSERT_BLOB, Statement.RETURN_GENERATED_KEYS);
             if (length == null) {
                 preparedStatement.setBinaryStream(1, blobStream);
             } else {
                 if (length.longValue() > StreamUtil.countBytesProcessed(blobStream, length.longValue(),
                         DEFAULT_BUFFER_SIZE)) {
-                    throw new BlobstoreException(ErrorCode.SHORT_STREAM);
+                    throw new BlobstoreException("too short stream");
                 }
                 preparedStatement.setBinaryStream(1, blobStream, length);
             }
@@ -209,10 +200,8 @@ public class JDBCBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
             }
             return Long.valueOf(lastKey);
         } catch (SQLException e) {
-            LOGGER.error(e.getMessage(), e);
             throw new RuntimeException(e);
         } catch (IOException e) {
-            LOGGER.error(e.getMessage(), e);
             throw new RuntimeException(e);
         } finally {
             try {

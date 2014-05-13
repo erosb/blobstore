@@ -20,13 +20,11 @@ import java.util.ArrayList;
 import java.util.Iterator;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Objects;
 import java.util.concurrent.ConcurrentMap;
 
-import org.everit.util.core.filter.Range;
-import org.everit.util.core.filter.RangeRelation;
-import org.everit.util.core.validation.ValidationUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.felix.scr.annotations.Reference;
+import org.osgi.service.log.LogService;
 
 public class BlobstoreCacheServiceImpl implements BlobstoreCacheService {
 
@@ -85,11 +83,12 @@ public class BlobstoreCacheServiceImpl implements BlobstoreCacheService {
     // }
     // }
 
-    private static final Logger LOGGER = LoggerFactory.getLogger(BlobstoreCacheServiceImpl.class);
-
     public static ClassLoader getClassLoader() {
         return BlobstoreCacheServiceImpl.class.getClassLoader();
     }
+
+    @Reference
+    private LogService LOGGER;
 
     private final ConcurrentMap<CacheKey, Fragment> cache;
 
@@ -342,7 +341,8 @@ public class BlobstoreCacheServiceImpl implements BlobstoreCacheService {
     public void removePartsByBlobId(final long blobId) {
         for (CacheKey key : keyCache.get(blobId)) {
             if (cache.remove(key) == null) {
-                LOGGER.warn("inconsistent cache state: {} exists in keyCache but not found in fragment cache", key);
+                LOGGER.log(LogService.LOG_WARNING, "inconsistent cache state: " + key
+                        + " exists in keyCache but not found in fragment cache");
             }
         }
         keyCache.remove(blobId);
@@ -355,7 +355,7 @@ public class BlobstoreCacheServiceImpl implements BlobstoreCacheService {
     @Override
     public void storeBlobPart(final long blobId, final long startPosition,
             final byte[] blobPart) {
-        ValidationUtil.isNotNull(blobPart, "blobPart");
+        Objects.requireNonNull(blobPart, "blobPart cannot be null");
         if (blobPart.length == 0) {
             return;
         }

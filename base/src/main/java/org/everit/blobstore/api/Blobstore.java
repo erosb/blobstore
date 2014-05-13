@@ -23,7 +23,7 @@ import java.io.InputStream;
  * if a {@link BlobstoreCacheService} is available it will be used first to find the fragments of a blob and the
  * database will be queried only if the fragments are not available in the cache.
  */
-public interface BlobstoreService {
+public interface Blobstore {
 
     /**
      * The maximum length of a blob description.

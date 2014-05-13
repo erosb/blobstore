@@ -16,64 +16,31 @@
  */
 package org.everit.blobstore.api;
 
-import org.everit.serviceutil.api.exception.AbstractServiceException;
-import org.everit.serviceutil.api.exception.Param;
-
 /**
  * Exception class for Blobstore.
  */
-public class BlobstoreException extends AbstractServiceException {
+public class BlobstoreException extends RuntimeException {
 
     /**
      * Default serial UID.
      */
     private static final long serialVersionUID = 1L;
 
-    /**
-     * Constructor with {@link ErrorCode}.
-     * 
-     * @param errorCode
-     *            The {@link ErrorCode}.
-     */
-    public BlobstoreException(final ErrorCode errorCode) {
-        super(errorCode);
+    public BlobstoreException(final String message) {
+        super(message);
     }
 
-    /**
-     * Constructor with {@link ErrorCode} and object array as parameters.
-     * 
-     * @param errorCode
-     *            The {@link ErrorCode}.
-     * @param params
-     *            The parameters.
-     */
-    public BlobstoreException(final ErrorCode errorCode, final Param... params) {
-        super(errorCode, params);
+    public BlobstoreException(final String message, final Throwable cause) {
+        super(message, cause);
     }
 
-    /**
-     * Constructor with {@link ErrorCode} and {@link Throwable} as cause.
-     * 
-     * @param errorCode
-     *            The {@link ErrorCode}.
-     * @param cause
-     *            The {@link Throwable} as cause.
-     */
-    public BlobstoreException(final ErrorCode errorCode, final Throwable cause) {
-        super(errorCode, cause);
+    public BlobstoreException(final String message, final Throwable cause, final boolean enableSuppression,
+            final boolean writableStackTrace) {
+        super(message, cause, enableSuppression, writableStackTrace);
     }
 
-    /**
-     * Constructor with {@link ErrorCode}, {@link Throwable} as cause and object array as parameters.
-     * 
-     * @param errorCode
-     *            The {@link ErrorCode}.
-     * @param cause
-     *            The {@link Throwable} as cause.
-     * @param params
-     *            The parameters.
-     */
-    public BlobstoreException(final ErrorCode errorCode, final Throwable cause, final Param... params) {
-        super(errorCode, cause, params);
+    public BlobstoreException(final Throwable cause) {
+        super(cause);
     }
+
 }

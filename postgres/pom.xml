@@ -39,7 +39,7 @@
 	</parent>
 
 	<groupId>org.everit.osgi</groupId>
-	<artifactId>org.everit.osgi.blobstore.postgres</artifactId>
+	<artifactId>org.everit.blobstore.postgres</artifactId>
 	<version>1.0.0</version>
 
 	<packaging>bundle</packaging>

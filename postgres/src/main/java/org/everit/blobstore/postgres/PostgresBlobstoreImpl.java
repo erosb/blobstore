@@ -44,7 +44,7 @@ import org.slf4j.LoggerFactory;
  * PostgreSQL specific implementation of {@link org.everit.blobstore.api.BlobstoreService}. This implementation handles
  * a cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
-public class PostgresBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
+public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
 
     /**
      * Name of the table the blob is stored.
@@ -98,7 +98,7 @@ public class PostgresBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
     /**
      * Logger of this class.
      */
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresBlobstoreServiceImpl.class);
+    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresBlobstoreImpl.class);
 
     /**
      * Getting the large object id based on the blob id.
@@ -139,7 +139,7 @@ public class PostgresBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
      * @param blobstoreCacheService
      *            See the superclass constructor.
      */
-    public PostgresBlobstoreServiceImpl(final DataSource dataSource, final XADataSource xaDataSource,
+    public PostgresBlobstoreImpl(final DataSource dataSource, final XADataSource xaDataSource,
             final BlobstoreCacheService blobstoreCacheService) {
         super(dataSource, xaDataSource, blobstoreCacheService);
 
@@ -185,7 +185,7 @@ public class PostgresBlobstoreServiceImpl extends AbstractBlobstoreServiceImpl {
         try {
             connection = getConnectionProvider().getConnection();
             PreparedStatement deleteStatement = null;
-            long largeObjectId = PostgresBlobstoreServiceImpl.getLargeObjectId(blobId, connection);
+            long largeObjectId = PostgresBlobstoreImpl.getLargeObjectId(blobId, connection);
             try {
                 deleteStatement = connection.prepareStatement(SQL_DELETE_BLOB_RECORD);
                 deleteStatement.setLong(1, blobId);

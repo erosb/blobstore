@@ -25,30 +25,25 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 
+import javax.sql.DataSource;
+
 import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.api.ErrorCode;
-import org.everit.blobstore.internal.api.ConnectionProvider;
 import org.everit.blobstore.internal.impl.AbstractBlobReaderInputStream;
 import org.everit.blobstore.internal.impl.StreamUtil;
-import org.everit.serviceutil.api.exception.Param;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.osgi.service.log.LogService;
 
-/**
- * The {@link AbstractCachedInputStream} implementation for JDBC database.
- */
 public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
     /**
      * Logger for this class.
      */
-    protected static final Logger LOGGER = LoggerFactory.getLogger(JDBCBlobReaderInputStream.class);
+    protected LogService LOGGER;
 
     /**
      * The statement which we can query a blob out from the database.
      */
-    public static final String BLOB_SELECT_STATEMENT = "SELECT " + JDBCBlobstoreServiceImpl.COLUMN_BLOB_DATA
+    public static final String BLOB_SELECT_STATEMENT = "SELECT " + JDBCBlobstoreImpl.COLUMN_BLOB_DATA
             + " FROM "
-            + JDBCBlobstoreServiceImpl.TABLE_NAME + " WHERE " + JDBCBlobstoreServiceImpl.COLUMN_BLOB_ID + "= ?";
+            + JDBCBlobstoreImpl.TABLE_NAME + " WHERE " + JDBCBlobstoreImpl.COLUMN_BLOB_ID + "= ?";
     /**
      * The connection to the database.
      */
@@ -57,7 +52,7 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
     /**
      * The connection provider to get database connections.
      */
-    private ConnectionProvider connectionProvider = null;
+    private DataSource dataSource = null;
 
     /**
      * The {@link InputStream} for the {@link Blob}.
@@ -81,7 +76,7 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
 
     /**
      * Constructor for the {@link AbstractCachedInputStream} implementation for JDBC database.
-     * 
+     *
      * @param connectionProvider
      *            The connection provider that allows us getting database connections.
      * @param blobId
@@ -91,15 +86,15 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
      * @throws SQLException
      *             If the db cannot be accessed.
      */
-    public JDBCBlobReaderInputStream(final ConnectionProvider connectionProvider, final Long blobId,
+    public JDBCBlobReaderInputStream(final DataSource connectionProvider, final Long blobId,
             final Long startPosition)
-            throws SQLException {
+                    throws SQLException {
         super(blobId, startPosition);
-        this.connectionProvider = connectionProvider;
+        this.dataSource = connectionProvider;
         try {
             Blob lBlob = getBlob();
             if (lBlob == null) {
-                throw new BlobstoreException(ErrorCode.BLOB_DOES_NOT_EXIST, new Param(blobId));
+                throw new BlobstoreException("blob [" + blobId + "] does not exist");
             }
             totalSize = lBlob.length();
         } finally {
@@ -139,7 +134,7 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
 
     /**
      * Getting a binary stream lazily.
-     * 
+     *
      * @return The binary stream of the blob.
      * @throws SQLException
      *             if a database error occurs.
@@ -153,10 +148,10 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
 
     /**
      * Getting the blob lazily.
-     * 
+     *
      * @return The blob instance.
      * @throws SQLException
-     *             If a database error occures.
+     *             If a database error occurs.
      */
     public Blob getBlob() throws SQLException {
         if (blob == null) {
@@ -169,9 +164,9 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
                 try {
                     rs = preparedStatement.executeQuery();
                     if (rs.next()) {
-                        blob = rs.getBlob(JDBCBlobstoreServiceImpl.COLUMN_BLOB_DATA);
+                        blob = rs.getBlob(JDBCBlobstoreImpl.COLUMN_BLOB_DATA);
                     } else {
-                        throw new BlobstoreException(ErrorCode.BLOB_DOES_NOT_EXIST, new Param(blobId));
+                        throw new BlobstoreException("blob [" + blobId + "] does not exist");
                     }
                 } finally {
                     if (rs != null) {
@@ -189,15 +184,12 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
 
     /**
      * Getting a connection lazily.
-     * 
+     *
      * @return The database connection.
      * @throws SQLException
      *             if a database error occurs.
      */
     public Connection getConnection() throws SQLException {
-        if (connection == null) {
-            connection = connectionProvider.getConnection();
-        }
         return connection;
     }
 
@@ -218,21 +210,16 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
                 StreamUtil.skip(is, startPosition - currentDbStreamPosition);
                 currentDbStreamPosition = startPosition;
             } catch (IOException e) {
-                throw new BlobstoreException(ErrorCode.SQL_EXCEPTION, e);
+                throw new BlobstoreException(e);
             }
         }
         ByteArrayOutputStream bout = new ByteArrayOutputStream(amount);
 
         try {
-            long copiedBytes = StreamUtil.copyStream(is, bout, (long) amount, JDBCBlobstoreServiceImpl.IO_BUFFER_SIZE);
+            long copiedBytes = StreamUtil.copyStream(is, bout, (long) amount, JDBCBlobstoreImpl.IO_BUFFER_SIZE);
             currentDbStreamPosition = currentDbStreamPosition + copiedBytes;
             if (copiedBytes != amount) {
-                Param blobIdParam = new Param(getBlobId());
-                Param positionParam = new Param(Long.valueOf(currentDbStreamPosition - copiedBytes));
-                Param amountParam = new Param(Integer.valueOf(amount));
-                Param copiedBytesParam = new Param(Long.valueOf(copiedBytes));
-                throw new BlobstoreException(ErrorCode.BLOB_READING_EXCEPTION,
-                        blobIdParam, positionParam, amountParam, copiedBytesParam);
+                throw new BlobstoreException("failed to copy byte array");
             }
             return bout.toByteArray();
         } catch (IOException e) {

@@ -14,25 +14,14 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - Blobstore Base.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.blobstore.internal.api;
+package org.everit.blobstore.internal.cache;
 
-/**
- * Type of current blobstore implementations.
- */
-public enum BlobstoreType {
+public class RangeException extends RuntimeException {
 
-    /**
-     * The type will be discovered automatically from the {@link java.sql.Connection#getClientInfo()} result.
-     */
-    AUTO,
+    private static final long serialVersionUID = -7760852011187692162L;
 
-    /**
-     * The PostgreSQL {@link org.postgresql.largeobject.LargeObject} API will be used.
-     */
-    POSTGRES,
+    public RangeException(final String message) {
+        super(message);
+    }
 
-    /**
-     * Standard JDBC {@link java.sql.Blob} will be used.
-     */
-    JDBC
 }

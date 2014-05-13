@@ -29,19 +29,17 @@
 	</parent>
 
 	<groupId>org.everit.osgi</groupId>
-	<artifactId>org.everit.osgi.blobstore.base</artifactId>
+	<artifactId>org.everit.blobstore</artifactId>
 	<version>1.0.0</version>
-
 	<packaging>bundle</packaging>
+	
 	<name>Everit - Blobstore Base</name>
-	<description>Common classes between blobstore.postgres and blobstore.jdbc</description>
+	<description>Common classes between blobstore.postgres and blobstore</description>
 
 	<properties>
-		<projectpath>osgi-blobstore-base</projectpath>
+		<projectpath>blobstore</projectpath>
 		<maven.compiler.source>1.7</maven.compiler.source>
 		<maven.compiler.target>1.7</maven.compiler.target>
-		<org.everit.serviceutil.version>0.6.0</org.everit.serviceutil.version>
-		<org.everit.util.version>0.8.0-SNAPSHOT</org.everit.util.version>
 	</properties>
 
 	<scm>
@@ -93,6 +91,7 @@
 						<Import-Package>
 							*
 						</Import-Package>
+						<Export-Package>${project.artifactId}.api;version="1.0.0"</Export-Package>
 						<!-- <Export-Package> ${project.artifactId}.api;version="1.0.0", ${project.artifactId}.schema.qdsl;version="1.0.0" 
 							</Export-Package> <Provide-Capability> liquibase.schema;name=org.everit.osgi.resource;resource=/META-INF/liquibase/resource.liquibase.xml;lqmg.config.resource=/META-INF/liquibase/resource.lqmg.xml 
 							</Provide-Capability> -->
@@ -109,24 +108,6 @@
 						<goals>
 							<goal>scr</goal>
 						</goals>
-					</execution>
-				</executions>
-			</plugin>
-			<plugin>
-				<groupId>org.codehaus.mojo</groupId>
-				<artifactId>build-helper-maven-plugin</artifactId>
-				<version>1.8</version>
-				<executions>
-					<execution>
-						<phase>generate-sources</phase>
-						<goals>
-							<goal>add-source</goal>
-						</goals>
-						<configuration>
-							<sources>
-								<source>src/main/generated/java/</source>
-							</sources>
-						</configuration>
 					</execution>
 				</executions>
 			</plugin>
@@ -147,21 +128,6 @@
 			<scope>provided</scope>
 		</dependency>
 		<dependency>
-			<groupId>org.everit.serviceutil</groupId>
-			<artifactId>org.everit.serviceutil.core</artifactId>
-			<version>${org.everit.serviceutil.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.everit.serviceutil</groupId>
-			<artifactId>org.everit.serviceutil.api</artifactId>
-			<version>${org.everit.serviceutil.version}</version>
-		</dependency>
-		<dependency>
-			<groupId>org.everit.util</groupId>
-			<artifactId>org.everit.util.core</artifactId>
-			<version>${org.everit.util.version}</version>
-		</dependency>
-		<dependency>
 			<groupId>org.everit.osgi</groupId>
 			<artifactId>org.everit.osgi.cache.api</artifactId>
 			<version>1.0.0</version>
@@ -171,15 +137,6 @@
 			<artifactId>org.apache.felix.scr.annotations</artifactId>
 			<version>1.9.6</version>
 		</dependency>
-		<!-- QueryDSL and required dependency -->
-		<!-- <dependency> <groupId>com.mysema.querydsl</groupId> <artifactId>querydsl-sql</artifactId> 
-			<version>3.3.1</version> </dependency> <dependency> <groupId>org.apache.servicemix.bundles</groupId> 
-			<artifactId>org.apache.servicemix.bundles.jsr305</artifactId> <version>2.0.0_1</version> 
-			<scope>provided</scope> </dependency> <dependency> <groupId>org.apache.servicemix.bundles</groupId> 
-			<artifactId>org.apache.servicemix.bundles.javax-inject</artifactId> <version>1_2</version> 
-			<scope>provided</scope> </dependency> <dependency> <groupId>org.slf4j</groupId> 
-			<artifactId>slf4j-simple</artifactId> <version>1.7.5</version> <scope>provided</scope> 
-			</dependency> -->
 		<dependency>
 			<groupId>junit</groupId>
 			<artifactId>junit</artifactId>
@@ -187,64 +144,4 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-
-	<repositories>
-		<repository>
-			<id>sourceforge</id>
-			<url>http://oss.sonatype.org/content/groups/sourceforge/</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>everit.groups.public</id>
-			<name>Everit Public Repository Group</name>
-			<url>https://repository.everit.biz/nexus/content/groups/public</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-		<repository>
-			<id>everit.groups.proxy</id>
-			<name>Everit Proxy Repository Group</name>
-			<url>https://repository.everit.biz/nexus/content/groups/proxy</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</repository>
-	</repositories>
-
-	<pluginRepositories>
-		<pluginRepository>
-			<id>everit.groups.public</id>
-			<name>Everit Public Repository Group</name>
-			<url>https://repository.everit.biz/nexus/content/groups/public</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</pluginRepository>
-		<pluginRepository>
-			<id>everit.groups.proxy</id>
-			<name>Everit Proxy Repository Group</name>
-			<url>https://repository.everit.biz/nexus/content/groups/proxy</url>
-			<releases>
-				<enabled>true</enabled>
-			</releases>
-			<snapshots>
-				<enabled>true</enabled>
-			</snapshots>
-		</pluginRepository>
-	</pluginRepositories>
 </project>

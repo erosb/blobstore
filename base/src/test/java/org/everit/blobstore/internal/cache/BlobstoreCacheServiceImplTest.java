@@ -23,8 +23,6 @@ import java.util.List;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentMap;
 
-import org.everit.util.core.filter.Range;
-import org.everit.util.core.validation.ValidationException;
 import org.junit.Assert;
 import org.junit.Before;
 import org.junit.Test;
@@ -49,15 +47,15 @@ public class BlobstoreCacheServiceImplTest {
             fragment = new Fragment(BLOB_ID, fragmentStartPosition);
         }
         for (Range<Long> range : ranges) {
-            int size = range.getHigherBound().intValue()
-                    - range.getLowerBound().intValue() - 1;
-            if (range.isHigherInclusive()) {
+            int size = range.getUpperEndpoint().intValue()
+                    - range.getLowerEndpoint().intValue() - 1;
+            if (range.isUpperInclusive()) {
                 ++size;
             }
             if (range.isLowerInclusive()) {
                 ++size;
             }
-            FragmentPart newPart = new FragmentPart(range.getLowerBound(),
+            FragmentPart newPart = new FragmentPart(range.getLowerEndpoint(),
                     BlobstoreCacheTestUtil.createData((byte) 1, size));
             fragment.insertFragmentPart(newPart);
         }
@@ -92,14 +90,14 @@ public class BlobstoreCacheServiceImplTest {
         List<CachedBlobPart> expectedList = Arrays.asList(new CachedBlobPart[] {
                 new CachedBlobPart(BLOB_ID, 700l, BlobstoreCacheTestUtil
                         .createData((byte) 1, 100)),
-                        new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
-                                .createData((byte) 1, 224)),
-                                new CachedBlobPart(BLOB_ID, 1024l, BlobstoreCacheTestUtil
-                                        .createData((byte) 1, 76)),
-                                        new CachedBlobPart(BLOB_ID, 1100l, BlobstoreCacheTestUtil
-                                                .createData((byte) 1, 100)),
-                                                new CachedBlobPart(BLOB_ID, 1200l, BlobstoreCacheTestUtil
-                                                        .createData((byte) 1, 50)) });
+                new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
+                        .createData((byte) 1, 224)),
+                new CachedBlobPart(BLOB_ID, 1024l, BlobstoreCacheTestUtil
+                        .createData((byte) 1, 76)),
+                new CachedBlobPart(BLOB_ID, 1100l, BlobstoreCacheTestUtil
+                        .createData((byte) 1, 100)),
+                new CachedBlobPart(BLOB_ID, 1200l, BlobstoreCacheTestUtil
+                        .createData((byte) 1, 50)) });
         List<CachedBlobPart> result = cacheService.getBlobParts(BLOB_ID, 700l,
                 550l);
         Assert.assertEquals(expectedList.size(), result.size());
@@ -112,14 +110,14 @@ public class BlobstoreCacheServiceImplTest {
         expectedList = Arrays.asList(new CachedBlobPart[] {
                 new CachedBlobPart(BLOB_ID, 700l, BlobstoreCacheTestUtil
                         .createData((byte) 1, 100)),
-                        new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
-                                .createData((byte) 1, 224)),
-                                new CachedBlobPart(BLOB_ID, 1024l, BlobstoreCacheTestUtil
-                                        .createData((byte) 1, 76)),
-                                        new CachedBlobPart(BLOB_ID, 1100l, BlobstoreCacheTestUtil
-                                                .createData((byte) 1, 100)),
-                                                new CachedBlobPart(BLOB_ID, 1200l, BlobstoreCacheTestUtil
-                                                        .createData((byte) 1, 100)) });
+                new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
+                        .createData((byte) 1, 224)),
+                new CachedBlobPart(BLOB_ID, 1024l, BlobstoreCacheTestUtil
+                        .createData((byte) 1, 76)),
+                new CachedBlobPart(BLOB_ID, 1100l, BlobstoreCacheTestUtil
+                        .createData((byte) 1, 100)),
+                new CachedBlobPart(BLOB_ID, 1200l, BlobstoreCacheTestUtil
+                        .createData((byte) 1, 100)) });
         result = cacheService.getBlobParts(BLOB_ID, 700l, 640l);
         Assert.assertEquals(expectedList.size(), result.size());
         idx = 0;
@@ -131,8 +129,8 @@ public class BlobstoreCacheServiceImplTest {
         expectedList = Arrays.asList(new CachedBlobPart[] {
                 new CachedBlobPart(BLOB_ID, 700l, BlobstoreCacheTestUtil
                         .createData((byte) 1, 100)),
-                        new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
-                                .createData((byte) 1, 120)) });
+                new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
+                        .createData((byte) 1, 120)) });
         result = cacheService.getBlobParts(BLOB_ID, 700l, 220l);
         Assert.assertEquals(expectedList.size(), result.size());
         idx = 0;
@@ -284,7 +282,7 @@ public class BlobstoreCacheServiceImplTest {
 
     }
 
-    @Test(expected = ValidationException.class)
+    @Test(expected = NullPointerException.class)
     public void testStoreBlobPartException() {
         cacheService.storeBlobPart(BLOB_ID, FRAGMENT_SIZE, null);
     }

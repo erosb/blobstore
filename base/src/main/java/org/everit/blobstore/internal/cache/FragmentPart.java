@@ -19,84 +19,82 @@ package org.everit.blobstore.internal.cache;
 import java.io.Serializable;
 import java.util.Arrays;
 
-import org.everit.util.core.filter.Range;
-
 public class FragmentPart implements Serializable {
 
-	private static final long serialVersionUID = -6366245907682133551L;
+    private static final long serialVersionUID = -6366245907682133551L;
 
-	private long startPositionInFragment;
+    private long startPositionInFragment;
 
-	private byte[] data;
+    private byte[] data;
 
-	public FragmentPart() {
+    public FragmentPart() {
 
-	}
+    }
 
-	public FragmentPart(final long startPositionInFragment, final byte[] data) {
-		super();
-		this.startPositionInFragment = startPositionInFragment;
-		this.data = data;
-	}
+    public FragmentPart(final long startPositionInFragment, final byte[] data) {
+        super();
+        this.startPositionInFragment = startPositionInFragment;
+        this.data = data;
+    }
 
-	public Range<Long> asRange() {
-		return new Range<Long>(startPositionInFragment, startPositionInFragment
-				+ data.length, true, false);
-	}
+    public Range<Long> asRange() {
+        return new Range<Long>(startPositionInFragment, startPositionInFragment
+                + data.length, true, false);
+    }
 
-	@Override
-	public boolean equals(final Object obj) {
-		if (this == obj) {
-			return true;
-		}
-		if (obj == null) {
-			return false;
-		}
-		if (getClass() != obj.getClass()) {
-			return false;
-		}
-		FragmentPart other = (FragmentPart) obj;
-		if (!Arrays.equals(data, other.data)) {
-			return false;
-		}
-		if (startPositionInFragment != other.startPositionInFragment) {
-			return false;
-		}
-		return true;
-	}
+    @Override
+    public boolean equals(final Object obj) {
+        if (this == obj) {
+            return true;
+        }
+        if (obj == null) {
+            return false;
+        }
+        if (getClass() != obj.getClass()) {
+            return false;
+        }
+        FragmentPart other = (FragmentPart) obj;
+        if (!Arrays.equals(data, other.data)) {
+            return false;
+        }
+        if (startPositionInFragment != other.startPositionInFragment) {
+            return false;
+        }
+        return true;
+    }
 
-	public byte[] getData() {
-		return data;
-	}
+    public byte[] getData() {
+        return data;
+    }
 
-	/**
-	 * @return startPositionInFragment + data.length
-	 */
-	public int getEndPositionInFragment() {
-		return (int) (startPositionInFragment + data.length);
-	}
+    /**
+     * @return startPositionInFragment + data.length
+     */
+    public int getEndPositionInFragment() {
+        return (int) (startPositionInFragment + data.length);
+    }
 
-	public long getStartPositionInFragment() {
-		return startPositionInFragment;
-	}
+    public long getStartPositionInFragment() {
+        return startPositionInFragment;
+    }
 
-	@Override
-	public int hashCode() {
-		final int prime = 31;
-		int result = 1;
-		result = prime * result + Arrays.hashCode(data);
-		result = prime
-				* result
-				+ (int) (startPositionInFragment ^ (startPositionInFragment >>> 32));
-		return result;
-	}
+    @Override
+    public int hashCode() {
+        final int prime = 31;
+        int result = 1;
+        result = prime * result + Arrays.hashCode(data);
+        result = prime
+                * result
+                + (int) (startPositionInFragment ^ (startPositionInFragment >>> 32));
+        return result;
+    }
 
-	public void setData(final byte[] data) {
-		this.data = data;
-	}
+    public void setData(final byte[] data) {
+        this.data = data;
+    }
 
-	public void setStartPositionInFragment(final long startPositionInFragment) {
-		this.startPositionInFragment = startPositionInFragment;
-	}
+    public void setStartPositionInFragment(final long startPositionInFragment) {
+        this.startPositionInFragment = startPositionInFragment;
+    }
 
 }

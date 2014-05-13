@@ -19,26 +19,23 @@ package org.everit.blobstore.internal.impl;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Objects;
 
 import javax.sql.DataSource;
-import javax.sql.XADataSource;
 
+import org.apache.felix.scr.annotations.Reference;
 import org.everit.blobstore.api.BlobReader;
 import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.api.BlobstoreService;
-import org.everit.blobstore.api.ErrorCode;
-import org.everit.blobstore.internal.api.ConnectionProvider;
+import org.everit.blobstore.api.Blobstore;
 import org.everit.blobstore.internal.cache.BlobstoreCacheService;
-import org.everit.serviceutil.api.exception.Param;
-import org.everit.util.core.validation.ValidationUtil;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.osgi.service.log.LogService;
 
 /**
- * Abstract class for common features needed by the {@link BlobstoreService}s.
+ * Abstract class for common features needed by the {@link Blobstore}s.
  */
-public abstract class AbstractBlobstoreServiceImpl implements BlobstoreService {
+public abstract class AbstractBlobstoreImpl implements Blobstore {
 
     /**
      * The label of the "blobReader" parameter.
@@ -53,7 +50,8 @@ public abstract class AbstractBlobstoreServiceImpl implements BlobstoreService {
     /**
      * Logger for this class.
      */
-    protected static final Logger LOGGER = LoggerFactory.getLogger(AbstractBlobstoreServiceImpl.class);
+    @Reference
+    private LogService LOGGER;
 
     /**
      * Default buffer size.
@@ -64,7 +62,7 @@ public abstract class AbstractBlobstoreServiceImpl implements BlobstoreService {
      * Connection provider for this blobstore service. By default a {@link DataSourceConnectionProvider} is instantiated
      * that may be overridden in the constructor of a subclass.
      */
-    private ConnectionProvider connectionProvider;
+    private final DataSource dataSource;
 
     /**
      * BlobstoreCacheService.
@@ -73,7 +71,7 @@ public abstract class AbstractBlobstoreServiceImpl implements BlobstoreService {
 
     /**
      * Constructor.
-     * 
+     *
      * @param dataSource
      *            Simple dataSource. If null xaDataSource has to be provided.
      * @param xaDataSource
@@ -82,16 +80,16 @@ public abstract class AbstractBlobstoreServiceImpl implements BlobstoreService {
      * @param blobstoreCacheService
      *            The cache that is used during reading blobs.
      */
-    public AbstractBlobstoreServiceImpl(final DataSource dataSource, final XADataSource xaDataSource,
+    public AbstractBlobstoreImpl(final DataSource dataSource,
             final BlobstoreCacheService blobstoreCacheService) {
-        connectionProvider = new DataSourceConnectionProvider(dataSource, xaDataSource);
+        this.dataSource = dataSource;
         this.blobstoreCacheService = blobstoreCacheService;
     }
 
     /**
      * Creating a database dependent blob reading inputstream instance.
-     * 
-     * @param pConnectionProvider
+     *
+     * @param dataSource
      *            Supports getting connections to the database.
      * @param blobId
      *            The id of the blob.
@@ -101,27 +99,15 @@ public abstract class AbstractBlobstoreServiceImpl implements BlobstoreService {
      * @throws SQLException
      *             If a database error occurs.
      */
-    protected abstract AbstractBlobReaderInputStream createBlobInputStream(ConnectionProvider pConnectionProvider,
+    protected abstract AbstractBlobReaderInputStream createBlobInputStream(
             long blobId, long startPosition) throws SQLException;
 
     @Override
     public long getBlobSizeByBlobId(final long blobId) {
-        AbstractBlobReaderInputStream inputStream = null;
-        try {
-            inputStream = createBlobInputStream(connectionProvider, blobId, 0);
+        try (AbstractBlobReaderInputStream inputStream = createBlobInputStream(blobId, 0)) {
             return inputStream.getTotalSize();
-        } catch (SQLException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new BlobstoreException(ErrorCode.SQL_EXCEPTION, e);
-        } finally {
-            try {
-                if (inputStream != null) {
-                    inputStream.close();
-                }
-            } catch (IOException e) {
-                LOGGER.error(e.getMessage(), e);
-                throw new BlobstoreException(ErrorCode.IO_EXCEPTION, e);
-            }
+        } catch (SQLException | IOException e) {
+            throw new BlobstoreException(e);
         }
     }
 
@@ -129,55 +115,59 @@ public abstract class AbstractBlobstoreServiceImpl implements BlobstoreService {
         return blobstoreCacheService;
     }
 
-    protected ConnectionProvider getConnectionProvider() {
-        return connectionProvider;
+    protected Connection getConnection() {
+        try {
+            return dataSource.getConnection();
+        } catch (SQLException e) {
+            throw new BlobstoreException(e);
+        }
+    }
+
+    public DataSource getDataSource() {
+        return dataSource;
     }
 
     @Override
     public void readBlob(final long blobId, final long startPosition, final BlobReader blobReader) {
         AbstractBlobReaderInputStream inputStream = null;
-        ValidationUtil.isNotNull(blobReader, BLOB_READER_LABEL);
+        Objects.requireNonNull(blobReader, "blobReader cannot be null");
         try {
-            inputStream = createBlobInputStream(connectionProvider, blobId, startPosition);
+            inputStream = createBlobInputStream(blobId, startPosition);
             long totalSize = inputStream.getTotalSize();
             if (totalSize < startPosition) {
-                Param blobIdParam = new Param(blobId);
-                Param totalSizeParam = new Param(totalSize);
-                Param startPositionParam = new Param(startPosition);
-                throw new BlobstoreException(ErrorCode.TOO_HIGH_START_POSITION,
-                        blobIdParam, totalSizeParam, startPositionParam);
+                throw new BlobstoreException("startPosition(=" + startPosition
+                        + ") cannot be higher than totalSize(=" + totalSize + ") of blob #" + blobId);
             }
             inputStream.setCacheService(getBlobstoreCacheService());
             BufferedInputStream bis = new BufferedInputStream(inputStream);
             blobReader.readBlob(bis);
         } catch (SQLException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new BlobstoreException(ErrorCode.SQL_EXCEPTION, e);
+            throw new BlobstoreException(e);
         } finally {
             try {
                 if (inputStream != null) {
                     inputStream.close();
                 }
             } catch (IOException e) {
-                LOGGER.error(e.getMessage(), e);
-                throw new BlobstoreException(ErrorCode.IO_EXCEPTION, e);
+                throw new BlobstoreException(e);
             }
         }
     }
 
     @Override
     public long storeBlob(final InputStream blobStream, final Long length, final String description) {
-        if ((description != null) && (description.length() > BlobstoreService.BLOB_DESCRIPTION_MAX_LENGTH)) {
-            throw new BlobstoreException(ErrorCode.TOO_LONG_DESCRIPTION);
+        if ((description != null) && (description.length() > Blobstore.BLOB_DESCRIPTION_MAX_LENGTH)) {
+            throw new BlobstoreException("description length must be at most " +
+                    Blobstore.BLOB_DESCRIPTION_MAX_LENGTH + ", actual length: " + description.length());
         }
-        ValidationUtil.isNotNull(blobStream, BLOB_STREAM_LABEL);
+        Objects.requireNonNull(blobStream, "blobStream cannot be null");
         return storeBlobNoParamCheck(blobStream, length, description);
     }
 
     /**
      * Subclasses may should override this method without the necessity of checking null blobStream or too long
      * description.
-     * 
+     *
      * @param blobStream
      *            The stream where the blob data comes from.
      * @param length
