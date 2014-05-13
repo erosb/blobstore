@@ -29,7 +29,7 @@
   </parent>
 
   <groupId>org.everit.osgi</groupId>
-  <artifactId>org.everit.blobstore.jdbc</artifactId>
+  <artifactId>org.everit.osgi.blobstore.jdbc</artifactId>
   <version>1.0.0</version>
 
   <packaging>bundle</packaging>
@@ -155,7 +155,7 @@
     </dependency>
     <dependency>
     	<groupId>org.everit.osgi</groupId>
-		<artifactId>org.everit.blobstore</artifactId>
+		<artifactId>org.everit.osgi.blobstore</artifactId>
 		<version>1.0.0</version>
     </dependency>
 		<!-- QueryDSL and required dependency -->

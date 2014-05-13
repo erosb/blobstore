@@ -16,7 +16,6 @@
  */
 package org.everit.blobstore.postgres;
 
-
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.Connection;
@@ -25,26 +24,22 @@ import java.sql.ResultSet;
 import java.sql.SQLException;
 
 import javax.sql.DataSource;
-import javax.sql.XADataSource;
 
+import org.apache.felix.scr.annotations.Reference;
 import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.api.ErrorCode;
-import org.everit.blobstore.internal.api.ConnectionProvider;
 import org.everit.blobstore.internal.cache.BlobstoreCacheService;
 import org.everit.blobstore.internal.impl.AbstractBlobReaderInputStream;
-import org.everit.blobstore.internal.impl.AbstractBlobstoreServiceImpl;
+import org.everit.blobstore.internal.impl.AbstractBlobstoreImpl;
 import org.everit.blobstore.internal.impl.StreamUtil;
-import org.everit.serviceutil.api.exception.Param;
+import org.osgi.service.log.LogService;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * PostgreSQL specific implementation of {@link org.everit.blobstore.api.BlobstoreService}. This implementation handles
  * a cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
-public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
+public class PostgresBlobstoreImpl extends AbstractBlobstoreImpl {
 
     /**
      * Name of the table the blob is stored.
@@ -96,13 +91,8 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
             + " = ?";
 
     /**
-     * Logger of this class.
-     */
-    private static final Logger LOGGER = LoggerFactory.getLogger(PostgresBlobstoreImpl.class);
-
-    /**
      * Getting the large object id based on the blob id.
-     * 
+     *
      * @param conn
      *            The database connection to use to get the large object id.
      * @param blobId
@@ -120,7 +110,7 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
             if (resultSet.next()) {
                 return resultSet.getLong(1);
             } else {
-                throw new BlobstoreException(ErrorCode.BLOB_DOES_NOT_EXIST, new Param(blobId));
+                throw new BlobstoreException("blob [" + blobId + "] does not exist");
             }
         } finally {
             if (preparedStatement != null) {
@@ -130,8 +120,14 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
     }
 
     /**
+     * Logger of this class.
+     */
+    @Reference
+    private LogService log;
+
+    /**
      * Constructor that calls the superclass constructor.
-     * 
+     *
      * @param dataSource
      *            See the superclass constructor.
      * @param xaDataSource
@@ -139,15 +135,13 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
      * @param blobstoreCacheService
      *            See the superclass constructor.
      */
-    public PostgresBlobstoreImpl(final DataSource dataSource, final XADataSource xaDataSource,
-            final BlobstoreCacheService blobstoreCacheService) {
-        super(dataSource, xaDataSource, blobstoreCacheService);
-
+    public PostgresBlobstoreImpl(final DataSource dataSource, final BlobstoreCacheService blobstoreCacheService) {
+        super(dataSource, blobstoreCacheService);
     }
 
     /**
      * Cleanup method for closing the connection and the large object handler.
-     * 
+     *
      * @param connection
      *            The connection to be closed.
      * @param obj
@@ -159,23 +153,22 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
                 obj.close();
             }
         } catch (SQLException e) {
-            LOGGER.error(e.getMessage(), e);
+            log.log(LogService.LOG_ERROR, e.getMessage());
         } finally {
             if (connection != null) {
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    LOGGER.error(e.getMessage(), e);
+                    log.log(LogService.LOG_ERROR, e.getMessage());
                 }
             }
         }
     }
 
     @Override
-    protected AbstractBlobReaderInputStream createBlobInputStream(final ConnectionProvider connectionProvider,
-            final long blobId,
+    protected AbstractBlobReaderInputStream createBlobInputStream(final long blobId,
             final long startPosition) throws SQLException {
-        return new PostgresBlobReaderInputStream(connectionProvider, blobId, startPosition);
+        return new PostgresBlobReaderInputStream(getDataSource(), blobId, startPosition);
     }
 
     @Override
@@ -183,7 +176,7 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
         Connection connection = null;
         LargeObject obj = null;
         try {
-            connection = getConnectionProvider().getConnection();
+            connection = getConnection();
             PreparedStatement deleteStatement = null;
             long largeObjectId = PostgresBlobstoreImpl.getLargeObjectId(blobId, connection);
             try {
@@ -191,7 +184,7 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
                 deleteStatement.setLong(1, blobId);
                 int deletedRecordNum = deleteStatement.executeUpdate();
                 if (deletedRecordNum < 1) {
-                    throw new BlobstoreException(ErrorCode.BLOB_DOES_NOT_EXIST, new Param(blobId));
+                    throw new BlobstoreException("blob [" + blobId + "] does not exist");
                 }
             } finally {
                 if (deleteStatement != null) {
@@ -201,8 +194,7 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
             LargeObjectManager loManager = PostgreSQLUtil.getPGConnection(connection).getLargeObjectAPI();
             loManager.delete(largeObjectId);
         } catch (SQLException e) {
-            LOGGER.error(e.getMessage(), e);
-            throw new RuntimeException(e);
+            throw new BlobstoreException(e);
         } finally {
             cleanup(connection, obj);
         }
@@ -213,18 +205,17 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
         Connection connection = null;
         PreparedStatement query = null;
         try {
-
-            connection = getConnectionProvider().getConnection();
+            connection = getConnection();
             query = connection.prepareStatement(SQL_QUERY_DESCRIPTION);
             query.setLong(1, blobId);
             ResultSet resultSet = query.executeQuery();
             if (resultSet.next()) {
                 return resultSet.getString(1);
             } else {
-                throw new BlobstoreException(ErrorCode.BLOB_DOES_NOT_EXIST, new Param(blobId));
+                throw new BlobstoreException("blob [" + blobId + "] does not exist");
             }
         } catch (SQLException e) {
-            throw new BlobstoreException(ErrorCode.SQL_EXCEPTION, e);
+            throw new BlobstoreException(e);
         } finally {
             try {
                 try {
@@ -237,14 +228,14 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
                     }
                 }
             } catch (SQLException e) {
-                LOGGER.error("Could not close database connection", e);
+                log.log(LogService.LOG_ERROR, "Could not close database connection");
             }
         }
     }
 
     /**
      * Inserting a newly created blob into the blob table.
-     * 
+     *
      * @param oid
      *            The id of the postgres large object.
      * @param description
@@ -263,17 +254,16 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
             if (resultSet.next()) {
                 return resultSet.getLong(1);
             } else {
-                throw new BlobstoreException(ErrorCode.SQL_EXCEPTION, new SQLException(
-                        "Blob id was not returned from database after running insert statement."));
+                throw new BlobstoreException("Blob id was not returned from database after running insert statement.");
             }
         } catch (SQLException e) {
-            throw new BlobstoreException(ErrorCode.SQL_EXCEPTION, e);
+            throw new BlobstoreException(e);
         } finally {
             if (insertStatement != null) {
                 try {
                     insertStatement.close();
                 } catch (SQLException e) {
-                    LOGGER.error("Could not close prepared statement for database", e);
+                    log.log(LogService.LOG_ERROR, "Could not close prepared statement for database: " + e.getMessage());
                 }
             }
         }
@@ -285,7 +275,7 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
         Connection connection = null;
         LargeObject obj = null;
         try {
-            connection = getConnectionProvider().getConnection();
+            connection = getConnection();
 
             LargeObjectManager loManager = PostgreSQLUtil.getPGConnection(connection).getLargeObjectAPI();
             Long oid = loManager.createLO();
@@ -293,14 +283,14 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreServiceImpl {
             long bytesProcessed = StreamUtil.copyStream(blobStream, obj.getOutputStream(), length, DEFAULT_BUFFER_SIZE);
 
             if ((length != null) && (length.longValue() != bytesProcessed)) {
-                throw new BlobstoreException(ErrorCode.SHORT_STREAM);
+                throw new BlobstoreException("too short stream");
             }
 
             return insertBlobIntoTable(oid, description, connection);
         } catch (SQLException e) {
-            throw new BlobstoreException(ErrorCode.SQL_EXCEPTION, e);
+            throw new BlobstoreException(e);
         } catch (IOException e) {
-            throw new BlobstoreException(ErrorCode.SQL_EXCEPTION, e);
+            throw new BlobstoreException(e);
         } finally {
             cleanup(connection, obj);
         }

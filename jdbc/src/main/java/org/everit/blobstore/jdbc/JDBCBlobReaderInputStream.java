@@ -36,7 +36,7 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
     /**
      * Logger for this class.
      */
-    protected LogService LOGGER;
+    protected LogService log;
 
     /**
      * The statement which we can query a blob out from the database.
@@ -77,7 +77,7 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
     /**
      * Constructor for the {@link AbstractCachedInputStream} implementation for JDBC database.
      *
-     * @param connectionProvider
+     * @param dataSource
      *            The connection provider that allows us getting database connections.
      * @param blobId
      *            The id of the {@link Blob} to be read.
@@ -86,11 +86,11 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
      * @throws SQLException
      *             If the db cannot be accessed.
      */
-    public JDBCBlobReaderInputStream(final DataSource connectionProvider, final Long blobId,
+    public JDBCBlobReaderInputStream(final DataSource dataSource, final Long blobId,
             final Long startPosition)
                     throws SQLException {
         super(blobId, startPosition);
-        this.dataSource = connectionProvider;
+        this.dataSource = dataSource;
         try {
             Blob lBlob = getBlob();
             if (lBlob == null) {

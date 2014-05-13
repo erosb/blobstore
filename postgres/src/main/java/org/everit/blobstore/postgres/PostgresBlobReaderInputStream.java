@@ -16,17 +16,17 @@
  */
 package org.everit.blobstore.postgres;
 
-import org.everit.blobstore.internal.api.ConnectionProvider;
-import org.everit.blobstore.internal.impl.AbstractBlobReaderInputStream;
-
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import javax.sql.DataSource;
+
+import org.everit.blobstore.internal.impl.AbstractBlobReaderInputStream;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 /**
  * The {@link AbstractCachedInputStream} implementation for PostgreSQL database.
@@ -36,11 +36,6 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
      * Logger for this class.
      */
     protected static final Logger LOGGER = LoggerFactory.getLogger(PostgresBlobReaderInputStream.class);
-
-    /**
-     * The connection provider to the database.
-     */
-    private ConnectionProvider connectionProvider;
 
     /**
      * Currently opened connection to the database.
@@ -57,9 +52,11 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
      */
     private Integer totalSize = null;
 
+    private final DataSource dataSource;
+
     /**
      * Constructor for the {@link AbstractCachedInputStream} implementation for PostgreSQL database.
-     * 
+     *
      * @param connectionProvider
      *            The connection provider to the database.
      * @param blobId
@@ -69,12 +66,11 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
      * @throws SQLException
      *             If the db cannot be accessed.
      */
-    public PostgresBlobReaderInputStream(final ConnectionProvider connectionProvider, final Long blobId,
+    public PostgresBlobReaderInputStream(final DataSource dataSource, final Long blobId,
             final Long startPosition)
-            throws SQLException {
+                    throws SQLException {
         super(blobId, startPosition);
-
-        this.connectionProvider = connectionProvider;
+        this.dataSource = dataSource;
         try {
             totalSize = getObj().size();
         } finally {
@@ -84,7 +80,7 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
 
     /**
      * Cleaning up the connection and large object if created.
-     * 
+     *
      * @param cleanObj
      *            whether to clean the obj or not.
      * @param cleanConnection
@@ -118,21 +114,21 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
 
     /**
      * Lazily initiating an exception.
-     * 
+     *
      * @return The created database connection.
      * @throws SQLException
      *             if a database error occurs.
      */
     protected Connection getConnection() throws SQLException {
         if (connection == null) {
-            connection = connectionProvider.getConnection();
+            connection = dataSource.getConnection();
         }
         return connection;
     }
 
     /**
      * Lazily getting a large object based on the {@link #getLargeObjectId()}.
-     * 
+     *
      * @return The large object.
      * @throws SQLException
      *             if a database error occurs.

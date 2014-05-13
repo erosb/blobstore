@@ -34,8 +34,8 @@ import org.everit.blobstore.internal.impl.AbstractBlobstoreImpl;
 import org.everit.blobstore.internal.impl.StreamUtil;
 
 /**
- * JDBC specific implementation of {@link org.everit.blobstore.api.Blobstore}. This implementation handles a
- * cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
+ * JDBC specific implementation of {@link org.everit.blobstore.api.Blobstore}. This implementation handles a cache based
+ * on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
 public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
 

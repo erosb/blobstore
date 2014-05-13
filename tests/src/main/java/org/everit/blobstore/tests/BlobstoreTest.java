@@ -28,31 +28,31 @@ import org.junit.Test;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
-@Component(name = "BlobstoreServiceTest", immediate = true)
+@Component(name = "BlobstoreTest", immediate = true)
 @Service(value = BlobstoreTest.class)
 @Properties({
-    @Property(name = "eosgi.testEngine", value = "junit4"),
-    @Property(name = "eosgi.testId", value = "blobstoreTest"),
+        @Property(name = "eosgi.testEngine", value = "junit4"),
+        @Property(name = "eosgi.testId", value = "blobstoreTest"),
 })
 public class BlobstoreTest {
 
     private static final Logger LOGGER = LoggerFactory.getLogger(BlobstoreTest.class);
 
     @Reference
-    private Blobstore blobstoreService;
+    private Blobstore blobstore;
 
-    public void bindBlobstoreService(final Blobstore blobstoreService) {
-        this.blobstoreService = blobstoreService;
+    public void bindBlobstore(final Blobstore blobstore) {
+        this.blobstore = blobstore;
     }
 
-    public Blobstore getBlobstoreService() {
-        return blobstoreService;
+    public Blobstore getBlobstore() {
+        return blobstore;
     }
 
     @Test
     @TestDuringDevelopment
     public void testBlobSize() {
-        Assert.assertNotNull(blobstoreService);
+        Assert.assertNotNull(blobstore);
         System.out.println("testBlobSize() running!");
     }
 

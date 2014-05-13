@@ -27,8 +27,8 @@ import javax.sql.DataSource;
 
 import org.apache.felix.scr.annotations.Reference;
 import org.everit.blobstore.api.BlobReader;
-import org.everit.blobstore.api.BlobstoreException;
 import org.everit.blobstore.api.Blobstore;
+import org.everit.blobstore.api.BlobstoreException;
 import org.everit.blobstore.internal.cache.BlobstoreCacheService;
 import org.osgi.service.log.LogService;
 
@@ -36,16 +36,6 @@ import org.osgi.service.log.LogService;
  * Abstract class for common features needed by the {@link Blobstore}s.
  */
 public abstract class AbstractBlobstoreImpl implements Blobstore {
-
-    /**
-     * The label of the "blobReader" parameter.
-     */
-    private static final String BLOB_READER_LABEL = "blobReader";
-
-    /**
-     * The label of the ""blobStrean" parameter.
-     */
-    private static final String BLOB_STREAM_LABEL = "blobStream";
 
     /**
      * Logger for this class.
