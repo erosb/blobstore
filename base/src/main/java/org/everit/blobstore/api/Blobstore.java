@@ -17,55 +17,30 @@
 package org.everit.blobstore.api;
 
 import java.io.InputStream;
+import java.sql.SQLException;
 
-/**
- * The service of a blob store that may be used to stored binary values. The service must be implemented in the way that
- * if a {@link BlobstoreCacheService} is available it will be used first to find the fragments of a blob and the
- * database will be queried only if the fragments are not available in the cache.
- */
 public interface Blobstore {
 
-    /**
-     * The maximum length of a blob description.
-     */
-    int BLOB_DESCRIPTION_MAX_LENGTH = 255;
+    final int BLOB_DESCRIPTION_MAX_LENGTH = 255;
 
-    /**
-     * Deleting a blob from the store.
-     * 
-     * @param blobId
-     *            The unique id of the blob that will be deleted.
-     * @throws org.everit.util.core.validation.ValidationException
-     *             if the blobId parameter is null.
-     */
     void deleteBlob(long blobId);
 
     /**
      * Getting the size of a blob by it's id.
-     * 
+     *
      * @param blobId
      *            The id of the blob.
      * @return The size in bytes.
      * @throws BlobstoreException
-     *             if a blob cannot be read due to one of the reasons: {@link ErrorCode#BLOB_DOES_NOT_EXIST},
-     *             {@link ErrorCode#SQL_EXCEPTION}, {@link ErrorCode#IO_EXCEPTION}.
+     *             if no blob found for {@code blobId} or an {@link SQLException} is thrown
      */
     long getBlobSizeByBlobId(long blobId);
 
-    /**
-     * Getting the description of a blob by it's id.
-     * 
-     * @param blobId
-     *            The id of the blob.
-     * @return The description.
-     * @throws BlobstoreException
-     *             from the following reasons: {@link ErrorCode#BLOB_DOES_NOT_EXIST}, {@link ErrorCode#SQL_EXCEPTION}.
-     */
     String getDescriptionByBlobId(long blobId);
 
     /**
      * Reading the content of a blob from the given position.
-     * 
+     *
      * @param blobId
      *            The unique id of the blob.
      * @param startPosition
@@ -84,7 +59,7 @@ public interface Blobstore {
 
     /**
      * Storing a blob with the data coming from the given inputStream.
-     * 
+     *
      * @param blobStream
      *            The stream where data will be read from when the blob is stored.
      * @param length
@@ -102,4 +77,5 @@ public interface Blobstore {
      *             if the blobStream parameter is null.
      */
     long storeBlob(InputStream blobStream, Long length, String description);
+
 }

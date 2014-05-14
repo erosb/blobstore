@@ -38,6 +38,7 @@ public class BlobstoreTest {
     @Reference
     private LogService log;
 
+    @Reference
     private Blobstore blobstore;
 
     public void bindBlobstore(final Blobstore blobstore) {
@@ -60,6 +61,7 @@ public class BlobstoreTest {
     @TestDuringDevelopment
     public void testBlobSize() {
         Assert.assertNotNull(log);
+        Assert.assertNotNull(blobstore);
         System.out.println("testBlobSize() running!");
     }
 

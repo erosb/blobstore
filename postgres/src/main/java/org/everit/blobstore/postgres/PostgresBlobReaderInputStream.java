@@ -20,7 +20,7 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import org.everit.blobstore.internal.impl.AbstractBlobReaderInputStream;
+import org.everit.blobstore.base.AbstractBlobReaderInputStream;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
 import org.slf4j.Logger;

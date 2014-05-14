@@ -27,17 +27,21 @@ import java.sql.Statement;
 
 import javax.sql.DataSource;
 
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Service;
 import org.everit.blobstore.api.BlobstoreException;
+import org.everit.blobstore.api.BlobstoreStorage;
+import org.everit.blobstore.base.AbstractBlobReaderInputStream;
+import org.everit.blobstore.base.StreamUtil;
 import org.everit.blobstore.internal.cache.BlobstoreCacheService;
-import org.everit.blobstore.internal.impl.AbstractBlobReaderInputStream;
-import org.everit.blobstore.internal.impl.AbstractBlobstoreImpl;
-import org.everit.blobstore.internal.impl.StreamUtil;
 
 /**
- * JDBC specific implementation of {@link org.everit.blobstore.api.Blobstore}. This implementation handles a cache based
- * on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
+ * JDBC specific implementation of {@link org.everit.blobstore.api.BlobstoreStorage}. This implementation handles a
+ * cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
-public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
+@Component(name = "org.everit.blobstore.JDBCBlobstore")
+@Service
+public class JDBCBlobstoreImpl implements BlobstoreStorage {
 
     /**
      * Name of the table the blob is stored.
@@ -81,11 +85,6 @@ public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
     private DataSource dataSource;
 
     /**
-     * BlobstoreCacheService.
-     */
-    protected BlobstoreCacheService blobstoreCacheService = null;
-
-    /**
      * Cleanup method for closing the connection and the large object handler.
      *
      * @param connection
@@ -112,9 +111,12 @@ public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
     }
 
     @Override
-    protected AbstractBlobReaderInputStream createBlobInputStream(final long blobId,
+    public AbstractBlobReaderInputStream createInputStream(final BlobstoreCacheService cache,
+            final long blobId,
             final long startPosition) throws SQLException {
-        return new JDBCBlobReaderInputStream(dataSource, blobId, startPosition);
+        JDBCBlobReaderInputStream rval = new JDBCBlobReaderInputStream(dataSource, blobId, startPosition);
+        rval.setCacheService(cache);
+        return rval;
     }
 
     @Override

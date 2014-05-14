@@ -28,8 +28,8 @@ import java.sql.SQLException;
 import javax.sql.DataSource;
 
 import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.internal.impl.AbstractBlobReaderInputStream;
-import org.everit.blobstore.internal.impl.StreamUtil;
+import org.everit.blobstore.base.AbstractBlobReaderInputStream;
+import org.everit.blobstore.base.StreamUtil;
 import org.osgi.service.log.LogService;
 
 public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {

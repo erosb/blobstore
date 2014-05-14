@@ -19,7 +19,7 @@ package org.everit.blobstore.internal.cache;
 import java.util.List;
 
 /**
- * Caching service running under {@link Blobstore}.
+ * Caching service running under {@link BlobstoreStorage}.
  */
 public interface BlobstoreCacheService {
 

@@ -27,10 +27,10 @@ import javax.sql.DataSource;
 
 import org.apache.felix.scr.annotations.Reference;
 import org.everit.blobstore.api.BlobstoreException;
+import org.everit.blobstore.api.BlobstoreStorage;
+import org.everit.blobstore.base.AbstractBlobReaderInputStream;
+import org.everit.blobstore.base.StreamUtil;
 import org.everit.blobstore.internal.cache.BlobstoreCacheService;
-import org.everit.blobstore.internal.impl.AbstractBlobReaderInputStream;
-import org.everit.blobstore.internal.impl.AbstractBlobstoreImpl;
-import org.everit.blobstore.internal.impl.StreamUtil;
 import org.osgi.service.log.LogService;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
@@ -39,7 +39,7 @@ import org.postgresql.largeobject.LargeObjectManager;
  * PostgreSQL specific implementation of {@link org.everit.blobstore.api.BlobstoreService}. This implementation handles
  * a cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
-public class PostgresBlobstoreImpl extends AbstractBlobstoreImpl {
+public class PostgresBlobstoreImpl implements BlobstoreStorage {
 
     /**
      * Name of the table the blob is stored.
@@ -163,7 +163,9 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreImpl {
     }
 
     @Override
-    protected AbstractBlobReaderInputStream createBlobInputStream(final long blobId,
+    public AbstractBlobReaderInputStream createInputStream(
+            final BlobstoreCacheService cache,
+            final long blobId,
             final long startPosition) throws SQLException {
         PostgresBlobReaderInputStream rval = new PostgresBlobReaderInputStream(
                 dataSource.getConnection(),
@@ -274,7 +276,7 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreImpl {
     }
 
     @Override
-    protected long storeBlobNoParamCheck(final InputStream blobStream, final Long length, final String description) {
+    public long storeBlobNoParamCheck(final InputStream blobStream, final Long length, final String description) {
         Connection connection = null;
         LargeObject obj = null;
         try {

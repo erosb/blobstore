@@ -14,51 +14,69 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - Blobstore Base.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.blobstore.internal.impl;
+package org.everit.blobstore.base;
 
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.sql.SQLException;
+import java.util.Map;
 import java.util.Objects;
 
+import org.apache.felix.scr.annotations.Activate;
+import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
+import org.apache.felix.scr.annotations.Service;
 import org.everit.blobstore.api.BlobReader;
 import org.everit.blobstore.api.Blobstore;
 import org.everit.blobstore.api.BlobstoreException;
+import org.everit.blobstore.api.BlobstoreStorage;
+import org.everit.blobstore.internal.cache.BlobstoreCacheService;
+import org.everit.blobstore.internal.cache.BlobstoreCacheServiceImpl;
 
-/**
- * Abstract class for common features needed by the {@link Blobstore}s.
- */
-public abstract class AbstractBlobstoreImpl implements Blobstore {
+@Component
+@Service
+public class BlobstoreImpl implements Blobstore {
 
-    /**
-     * Default buffer size.
-     */
-    protected static final int DEFAULT_BUFFER_SIZE = 2048;
+    @Reference
+    private Map<Long, Boolean> clusteredCache;
 
-    /**
-     * Creating a database dependent blob reading inputstream instance.
-     *
-     * @param dataSource
-     *            Supports getting connections to the database.
-     * @param blobId
-     *            The id of the blob.
-     * @param startPosition
-     *            The starting position where the blob should start.
-     * @return The input stream instance.
-     * @throws SQLException
-     *             If a database error occurs.
-     */
-    protected abstract AbstractBlobReaderInputStream createBlobInputStream(
-            long blobId, long startPosition) throws SQLException;
+    @Reference
+    private BlobstoreStorage storage;
+
+    private BlobstoreCacheService cache;
+
+    @Activate
+    public void activate() {
+        // TODO
+        cache = new BlobstoreCacheServiceImpl(null, null);
+    }
+
+    public void bindClusteredCache(final Map<Long, Boolean> clusteredCache) {
+        this.clusteredCache = clusteredCache;
+    }
+
+    public void bindStorage(final BlobstoreStorage storage) {
+        this.storage = storage;
+    }
+
+    @Override
+    public void deleteBlob(final long blobId) {
+        storage.deleteBlob(blobId);
+    }
 
     @Override
     public long getBlobSizeByBlobId(final long blobId) {
-        try (AbstractBlobReaderInputStream inputStream = createBlobInputStream(blobId, 0)) {
-            return inputStream.getTotalSize();
-        } catch (SQLException | IOException e) {
+        try {
+            return storage.createInputStream(cache, blobId, 0).getTotalSize();
+        } catch (SQLException e) {
             throw new BlobstoreException(e);
         }
+    }
+
+    @Override
+    public String getDescriptionByBlobId(final long blobId) {
+        return storage.getDescriptionByBlobId(blobId);
     }
 
     @Override
@@ -66,7 +84,7 @@ public abstract class AbstractBlobstoreImpl implements Blobstore {
         AbstractBlobReaderInputStream inputStream = null;
         Objects.requireNonNull(blobReader, "blobReader cannot be null");
         try {
-            inputStream = createBlobInputStream(blobId, startPosition);
+            inputStream = storage.createInputStream(cache, blobId, startPosition);
             long totalSize = inputStream.getTotalSize();
             if (totalSize < startPosition) {
                 throw new BlobstoreException("startPosition(=" + startPosition
@@ -89,26 +107,12 @@ public abstract class AbstractBlobstoreImpl implements Blobstore {
 
     @Override
     public long storeBlob(final InputStream blobStream, final Long length, final String description) {
+        Objects.requireNonNull(blobStream, "blobStream cannot be null");
         if ((description != null) && (description.length() > Blobstore.BLOB_DESCRIPTION_MAX_LENGTH)) {
             throw new BlobstoreException("description length must be at most " +
                     Blobstore.BLOB_DESCRIPTION_MAX_LENGTH + ", actual length: " + description.length());
         }
-        Objects.requireNonNull(blobStream, "blobStream cannot be null");
-        return storeBlobNoParamCheck(blobStream, length, description);
+        return storage.storeBlobNoParamCheck(blobStream, length, description);
     }
 
-    /**
-     * Subclasses may should override this method without the necessity of checking null blobStream or too long
-     * description.
-     *
-     * @param blobStream
-     *            The stream where the blob data comes from.
-     * @param length
-     *            The length that should be read from the blobstream.
-     * @param description
-     *            The description of the blob.
-     * @return the id of the blob.
-     */
-    protected abstract long storeBlobNoParamCheck(final InputStream blobStream, final Long length,
-            final String description);
 }

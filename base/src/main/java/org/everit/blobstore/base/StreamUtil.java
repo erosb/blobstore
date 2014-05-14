@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - Blobstore Base.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.blobstore.internal.impl;
+package org.everit.blobstore.base;
 
 import java.io.EOFException;
 import java.io.IOException;
