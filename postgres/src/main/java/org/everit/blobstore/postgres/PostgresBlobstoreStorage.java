@@ -123,18 +123,22 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
      * Logger of this instance.
      */
     @Reference
-    private LogService log;
+    private LogService logger;
 
     /**
      * Connection provider for this blobstore service. By default a {@link DataSourceConnectionProvider} is instantiated
      * that may be overridden in the constructor of a subclass.
      */
+    @Reference
     private DataSource dataSource;
 
-    /**
-     * BlobstoreCacheService.
-     */
-    protected BlobstoreCacheService blobstoreCacheService = null;
+    public void bindDataSource(final DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
+
+    public void bindLogger(final LogService logger) {
+        this.logger = logger;
+    }
 
     /**
      * Cleanup method for closing the connection and the large object handler.
@@ -150,13 +154,13 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
                 obj.close();
             }
         } catch (SQLException e) {
-            log.log(LogService.LOG_ERROR, e.getMessage());
+            logConnectionCloseFailure(e);
         } finally {
             if (connection != null) {
                 try {
                     connection.close();
                 } catch (SQLException e) {
-                    log.log(LogService.LOG_ERROR, e.getMessage());
+                    logConnectionCloseFailure(e);
                 }
             }
         }
@@ -172,7 +176,7 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
                 blobId,
                 startPosition
                 );
-        rval.setCacheService(blobstoreCacheService);
+        rval.setCacheService(cache);
         return rval;
     }
 
@@ -233,7 +237,7 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
                     }
                 }
             } catch (SQLException e) {
-                log.log(LogService.LOG_ERROR, "Could not close database connection");
+                logConnectionCloseFailure(e);
             }
         }
     }
@@ -268,11 +272,15 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
                 try {
                     insertStatement.close();
                 } catch (SQLException e) {
-                    log.log(LogService.LOG_ERROR, "Could not close prepared statement for database: " + e.getMessage());
+                    logConnectionCloseFailure(e);
                 }
             }
         }
 
+    }
+
+    private void logConnectionCloseFailure(final SQLException e) {
+        logger.log(LogService.LOG_ERROR, e.getMessage());
     }
 
     @Override

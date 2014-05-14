@@ -28,6 +28,7 @@ import java.sql.Statement;
 import javax.sql.DataSource;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.everit.blobstore.api.BlobstoreException;
 import org.everit.blobstore.api.BlobstoreStorage;
@@ -82,7 +83,12 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
      * Connection provider for this blobstore service. By default a {@link DataSourceConnectionProvider} is instantiated
      * that may be overridden in the constructor of a subclass.
      */
+    @Reference
     private DataSource dataSource;
+
+    public void bindDataSource(final DataSource dataSource) {
+        this.dataSource = dataSource;
+    }
 
     /**
      * Cleanup method for closing the connection and the large object handler.
