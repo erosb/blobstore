@@ -120,24 +120,21 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreImpl {
     }
 
     /**
-     * Logger of this class.
+     * Logger of this instance.
      */
     @Reference
     private LogService log;
 
     /**
-     * Constructor that calls the superclass constructor.
-     *
-     * @param dataSource
-     *            See the superclass constructor.
-     * @param xaDataSource
-     *            See the superclass constructor.
-     * @param blobstoreCacheService
-     *            See the superclass constructor.
+     * Connection provider for this blobstore service. By default a {@link DataSourceConnectionProvider} is instantiated
+     * that may be overridden in the constructor of a subclass.
      */
-    public PostgresBlobstoreImpl(final DataSource dataSource, final BlobstoreCacheService blobstoreCacheService) {
-        super(dataSource, blobstoreCacheService);
-    }
+    private DataSource dataSource;
+
+    /**
+     * BlobstoreCacheService.
+     */
+    protected BlobstoreCacheService blobstoreCacheService = null;
 
     /**
      * Cleanup method for closing the connection and the large object handler.
@@ -168,7 +165,13 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreImpl {
     @Override
     protected AbstractBlobReaderInputStream createBlobInputStream(final long blobId,
             final long startPosition) throws SQLException {
-        return new PostgresBlobReaderInputStream(getDataSource(), blobId, startPosition);
+        PostgresBlobReaderInputStream rval = new PostgresBlobReaderInputStream(
+                dataSource.getConnection(),
+                blobId,
+                startPosition
+                );
+        rval.setCacheService(blobstoreCacheService);
+        return rval;
     }
 
     @Override
@@ -176,7 +179,7 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreImpl {
         Connection connection = null;
         LargeObject obj = null;
         try {
-            connection = getConnection();
+            connection = dataSource.getConnection();
             PreparedStatement deleteStatement = null;
             long largeObjectId = PostgresBlobstoreImpl.getLargeObjectId(blobId, connection);
             try {
@@ -205,7 +208,7 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreImpl {
         Connection connection = null;
         PreparedStatement query = null;
         try {
-            connection = getConnection();
+            connection = dataSource.getConnection();
             query = connection.prepareStatement(SQL_QUERY_DESCRIPTION);
             query.setLong(1, blobId);
             ResultSet resultSet = query.executeQuery();
@@ -244,7 +247,7 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreImpl {
      *            The database connection which we can run the query on.
      * @return The generated id of the blob.
      */
-    protected long insertBlobIntoTable(final long oid, final String description, final Connection connection) {
+    private long insertBlobIntoTable(final long oid, final String description, final Connection connection) {
         PreparedStatement insertStatement = null;
         try {
             insertStatement = connection.prepareStatement(SQL_INSERT_BLOB);
@@ -275,7 +278,7 @@ public class PostgresBlobstoreImpl extends AbstractBlobstoreImpl {
         Connection connection = null;
         LargeObject obj = null;
         try {
-            connection = getConnection();
+            connection = dataSource.getConnection();
 
             LargeObjectManager loManager = PostgreSQLUtil.getPGConnection(connection).getLargeObjectAPI();
             Long oid = loManager.createLO();

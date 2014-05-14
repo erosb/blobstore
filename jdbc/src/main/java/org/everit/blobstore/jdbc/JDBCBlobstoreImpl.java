@@ -75,18 +75,15 @@ public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
             + COLUMN_BLOB_DATA + ", " + COLUMN_DESCRIPTION + ") VALUES (?, ?)";
 
     /**
-     * Simple constructor that does nothing else but calls the constructor of the superclass.
-     *
-     * @param dataSource
-     *            See the constructor of the superclass.
-     * @param xaDataSource
-     *            See the constructor of the superclass.
-     * @param blobstoreCacheService
-     *            See the constructor of the superclass.
+     * Connection provider for this blobstore service. By default a {@link DataSourceConnectionProvider} is instantiated
+     * that may be overridden in the constructor of a subclass.
      */
-    public JDBCBlobstoreImpl(final DataSource dataSource, final BlobstoreCacheService blobstoreCacheService) {
-        super(dataSource, blobstoreCacheService);
-    }
+    private DataSource dataSource;
+
+    /**
+     * BlobstoreCacheService.
+     */
+    protected BlobstoreCacheService blobstoreCacheService = null;
 
     /**
      * Cleanup method for closing the connection and the large object handler.
@@ -117,14 +114,14 @@ public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
     @Override
     protected AbstractBlobReaderInputStream createBlobInputStream(final long blobId,
             final long startPosition) throws SQLException {
-        return new JDBCBlobReaderInputStream(getDataSource(), blobId, startPosition);
+        return new JDBCBlobReaderInputStream(dataSource, blobId, startPosition);
     }
 
     @Override
     public void deleteBlob(final long blobId) {
         Connection connection = null;
         try {
-            connection = getConnection();
+            connection = dataSource.getConnection();
             PreparedStatement preparedStatement = connection
                     .prepareStatement("DELETE FROM " + TABLE_NAME + " WHERE " + COLUMN_BLOB_ID + " = ?");
             preparedStatement.setLong(1, blobId);
@@ -142,7 +139,7 @@ public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
         Connection connection = null;
         PreparedStatement preparedStatement = null;
         try {
-            connection = getConnection();
+            connection = dataSource.getConnection();
             preparedStatement = connection.prepareStatement(SQL_QUERY_DESCRIPTION);
             preparedStatement.setLong(1, blobId);
 
@@ -180,7 +177,7 @@ public class JDBCBlobstoreImpl extends AbstractBlobstoreImpl {
         PreparedStatement preparedStatement = null;
         ResultSet keyset = null;
         try {
-            connection = getConnection();
+            connection = dataSource.getConnection();
             preparedStatement = connection.prepareStatement(SQL_INSERT_BLOB, Statement.RETURN_GENERATED_KEYS);
             if (length == null) {
                 preparedStatement.setBinaryStream(1, blobStream);

@@ -25,12 +25,11 @@ import org.apache.felix.scr.annotations.Deactivate;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
-import org.everit.blobstore.api.Blobstore;
 import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 
 @Component(name = "org.everit.blobstore.jdbc.JDBCBlobstore", configurationFactory = true,
-        policy = ConfigurationPolicy.REQUIRE)
+policy = ConfigurationPolicy.REQUIRE)
 @Properties({ @Property(name = "dataSource.target"), @Property(name = "logService.target") })
 public class JDBCBlobstoreComponent {
 
@@ -42,7 +41,7 @@ public class JDBCBlobstoreComponent {
 
     @Activate
     public void activate(final BundleContext context) {
-        Blobstore blobstoreService = new JDBCBlobstoreImpl(dataSource, null);
+        // Blobstore blobstoreService = new JDBCBlobstoreImpl(dataSource, null);
     }
 
     public void bindDataSource(final DataSource dataSource) {

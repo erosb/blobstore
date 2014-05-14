@@ -19,18 +19,12 @@ package org.everit.blobstore.internal.impl;
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.io.InputStream;
-import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
 
-import javax.sql.DataSource;
-
-import org.apache.felix.scr.annotations.Reference;
 import org.everit.blobstore.api.BlobReader;
 import org.everit.blobstore.api.Blobstore;
 import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.internal.cache.BlobstoreCacheService;
-import org.osgi.service.log.LogService;
 
 /**
  * Abstract class for common features needed by the {@link Blobstore}s.
@@ -38,43 +32,9 @@ import org.osgi.service.log.LogService;
 public abstract class AbstractBlobstoreImpl implements Blobstore {
 
     /**
-     * Logger for this class.
-     */
-    @Reference
-    private LogService logger;
-
-    /**
      * Default buffer size.
      */
     protected static final int DEFAULT_BUFFER_SIZE = 2048;
-
-    /**
-     * Connection provider for this blobstore service. By default a {@link DataSourceConnectionProvider} is instantiated
-     * that may be overridden in the constructor of a subclass.
-     */
-    private final DataSource dataSource;
-
-    /**
-     * BlobstoreCacheService.
-     */
-    protected BlobstoreCacheService blobstoreCacheService = null;
-
-    /**
-     * Constructor.
-     *
-     * @param dataSource
-     *            Simple dataSource. If null xaDataSource has to be provided.
-     * @param xaDataSource
-     *            XA enabled datasource. If null simple dataSource has to be provided. During creating a connection XA
-     *            enabled datasource is checked first.
-     * @param blobstoreCacheService
-     *            The cache that is used during reading blobs.
-     */
-    public AbstractBlobstoreImpl(final DataSource dataSource,
-            final BlobstoreCacheService blobstoreCacheService) {
-        this.dataSource = dataSource;
-        this.blobstoreCacheService = blobstoreCacheService;
-    }
 
     /**
      * Creating a database dependent blob reading inputstream instance.
@@ -101,22 +61,6 @@ public abstract class AbstractBlobstoreImpl implements Blobstore {
         }
     }
 
-    public BlobstoreCacheService getBlobstoreCacheService() {
-        return blobstoreCacheService;
-    }
-
-    protected Connection getConnection() {
-        try {
-            return dataSource.getConnection();
-        } catch (SQLException e) {
-            throw new BlobstoreException(e);
-        }
-    }
-
-    public DataSource getDataSource() {
-        return dataSource;
-    }
-
     @Override
     public void readBlob(final long blobId, final long startPosition, final BlobReader blobReader) {
         AbstractBlobReaderInputStream inputStream = null;
@@ -128,7 +72,6 @@ public abstract class AbstractBlobstoreImpl implements Blobstore {
                 throw new BlobstoreException("startPosition(=" + startPosition
                         + ") cannot be higher than totalSize(=" + totalSize + ") of blob #" + blobId);
             }
-            inputStream.setCacheService(getBlobstoreCacheService());
             BufferedInputStream bis = new BufferedInputStream(inputStream);
             blobReader.readBlob(bis);
         } catch (SQLException e) {

@@ -20,8 +20,6 @@ import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
 
-import javax.sql.DataSource;
-
 import org.everit.blobstore.internal.impl.AbstractBlobReaderInputStream;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
@@ -52,8 +50,6 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
      */
     private Integer totalSize = null;
 
-    private final DataSource dataSource;
-
     /**
      * Constructor for the {@link AbstractCachedInputStream} implementation for PostgreSQL database.
      *
@@ -66,11 +62,11 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
      * @throws SQLException
      *             If the db cannot be accessed.
      */
-    public PostgresBlobReaderInputStream(final DataSource dataSource, final Long blobId,
+    public PostgresBlobReaderInputStream(final Connection connection, final Long blobId,
             final Long startPosition)
                     throws SQLException {
         super(blobId, startPosition);
-        this.dataSource = dataSource;
+        this.connection = connection;
         try {
             totalSize = getObj().size();
         } finally {
@@ -113,20 +109,6 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
     }
 
     /**
-     * Lazily initiating an exception.
-     *
-     * @return The created database connection.
-     * @throws SQLException
-     *             if a database error occurs.
-     */
-    protected Connection getConnection() throws SQLException {
-        if (connection == null) {
-            connection = dataSource.getConnection();
-        }
-        return connection;
-    }
-
-    /**
      * Lazily getting a large object based on the {@link #getLargeObjectId()}.
      *
      * @return The large object.
@@ -135,9 +117,8 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
      */
     protected LargeObject getObj() throws SQLException {
         if (obj == null) {
-            Connection conn = getConnection();
-            LargeObjectManager largeObjectAPI = PostgreSQLUtil.getPGConnection(conn).getLargeObjectAPI();
-            obj = largeObjectAPI.open(PostgresBlobstoreImpl.getLargeObjectId(getBlobId(), conn),
+            LargeObjectManager largeObjectAPI = PostgreSQLUtil.getPGConnection(connection).getLargeObjectAPI();
+            obj = largeObjectAPI.open(PostgresBlobstoreImpl.getLargeObjectId(getBlobId(), connection),
                     LargeObjectManager.READ);
         }
         return obj;
