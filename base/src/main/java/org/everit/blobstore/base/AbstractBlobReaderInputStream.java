@@ -98,11 +98,6 @@ public abstract class AbstractBlobReaderInputStream extends InputStream {
     }
 
     @Override
-    public final int read(final byte[] bytes) throws IOException {
-        return read(bytes, 0, bytes.length);
-    }
-
-    @Override
     public final int read(final byte[] buffer, final int off, final int len) throws IOException {
 
         if (len > (buffer.length - off)) {
@@ -179,8 +174,4 @@ public abstract class AbstractBlobReaderInputStream extends InputStream {
         this.cacheService = cacheService;
     }
 
-    @Override
-    public final long skip(final long n) throws IOException {
-        return super.skip(n);
-    }
 }
