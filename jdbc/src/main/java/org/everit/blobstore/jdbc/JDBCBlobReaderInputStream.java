@@ -41,9 +41,9 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
     /**
      * The statement which we can query a blob out from the database.
      */
-    public static final String BLOB_SELECT_STATEMENT = "SELECT " + JDBCBlobstoreImpl.COLUMN_BLOB_DATA
+    public static final String BLOB_SELECT_STATEMENT = "SELECT " + JDBCBlobstoreStorage.COLUMN_BLOB_DATA
             + " FROM "
-            + JDBCBlobstoreImpl.TABLE_NAME + " WHERE " + JDBCBlobstoreImpl.COLUMN_BLOB_ID + "= ?";
+            + JDBCBlobstoreStorage.TABLE_NAME + " WHERE " + JDBCBlobstoreStorage.COLUMN_BLOB_ID + "= ?";
     /**
      * The connection to the database.
      */
@@ -159,7 +159,7 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
                 try {
                     rs = preparedStatement.executeQuery();
                     if (rs.next()) {
-                        blob = rs.getBlob(JDBCBlobstoreImpl.COLUMN_BLOB_DATA);
+                        blob = rs.getBlob(JDBCBlobstoreStorage.COLUMN_BLOB_DATA);
                     } else {
                         throw new BlobstoreException("blob [" + blobId + "] does not exist");
                     }
@@ -211,7 +211,7 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
         ByteArrayOutputStream bout = new ByteArrayOutputStream(amount);
 
         try {
-            long copiedBytes = StreamUtil.copyStream(is, bout, (long) amount, JDBCBlobstoreImpl.IO_BUFFER_SIZE);
+            long copiedBytes = StreamUtil.copyStream(is, bout, (long) amount, JDBCBlobstoreStorage.IO_BUFFER_SIZE);
             currentDbStreamPosition = currentDbStreamPosition + copiedBytes;
             if (copiedBytes != amount) {
                 throw new BlobstoreException("failed to copy byte array");

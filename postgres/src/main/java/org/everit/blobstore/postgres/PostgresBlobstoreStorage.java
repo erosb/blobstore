@@ -39,7 +39,7 @@ import org.postgresql.largeobject.LargeObjectManager;
  * PostgreSQL specific implementation of {@link org.everit.blobstore.api.BlobstoreService}. This implementation handles
  * a cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
-public class PostgresBlobstoreImpl implements BlobstoreStorage {
+public class PostgresBlobstoreStorage implements BlobstoreStorage {
 
     /**
      * Name of the table the blob is stored.
@@ -183,7 +183,7 @@ public class PostgresBlobstoreImpl implements BlobstoreStorage {
         try {
             connection = dataSource.getConnection();
             PreparedStatement deleteStatement = null;
-            long largeObjectId = PostgresBlobstoreImpl.getLargeObjectId(blobId, connection);
+            long largeObjectId = PostgresBlobstoreStorage.getLargeObjectId(blobId, connection);
             try {
                 deleteStatement = connection.prepareStatement(SQL_DELETE_BLOB_RECORD);
                 deleteStatement.setLong(1, blobId);

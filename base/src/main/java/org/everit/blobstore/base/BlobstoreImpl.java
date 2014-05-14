@@ -32,7 +32,6 @@ import org.everit.blobstore.api.Blobstore;
 import org.everit.blobstore.api.BlobstoreException;
 import org.everit.blobstore.api.BlobstoreStorage;
 import org.everit.blobstore.internal.cache.BlobstoreCacheService;
-import org.everit.blobstore.internal.cache.BlobstoreCacheServiceImpl;
 
 @Component
 @Service
@@ -49,7 +48,7 @@ public class BlobstoreImpl implements Blobstore {
     @Activate
     public void activate() {
         // TODO
-        cache = new BlobstoreCacheServiceImpl(null, null);
+        cache = new BlobstoreCacheService(null, null);
     }
 
     public void bindClusteredCache(final Map<Long, Boolean> clusteredCache) {

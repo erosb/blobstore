@@ -41,7 +41,7 @@ import org.everit.blobstore.internal.cache.BlobstoreCacheService;
  */
 @Component(name = "org.everit.blobstore.JDBCBlobstore")
 @Service
-public class JDBCBlobstoreImpl implements BlobstoreStorage {
+public class JDBCBlobstoreStorage implements BlobstoreStorage {
 
     /**
      * Name of the table the blob is stored.

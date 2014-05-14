@@ -33,7 +33,7 @@ public class BlobstoreCacheServiceImplTest {
 
     private static long BLOB_ID = 10l;
 
-    private BlobstoreCacheServiceImpl cacheService;
+    private BlobstoreCacheService cacheService;
 
     private ConcurrentMap<CacheKey, Fragment> cache;
 
@@ -72,7 +72,7 @@ public class BlobstoreCacheServiceImplTest {
     public void setUp() {
         cache = new ConcurrentHashMap<CacheKey, Fragment>();
         keyCache = new ConcurrentHashMap<Long, List<CacheKey>>();
-        cacheService = new BlobstoreCacheServiceImpl(cache, keyCache);
+        cacheService = new BlobstoreCacheService(cache, keyCache);
         cacheService.setFragmentSize(FRAGMENT_SIZE);
     }
 

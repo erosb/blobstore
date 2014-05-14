@@ -118,7 +118,7 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
     protected LargeObject getObj() throws SQLException {
         if (obj == null) {
             LargeObjectManager largeObjectAPI = PostgreSQLUtil.getPGConnection(connection).getLargeObjectAPI();
-            obj = largeObjectAPI.open(PostgresBlobstoreImpl.getLargeObjectId(getBlobId(), connection),
+            obj = largeObjectAPI.open(PostgresBlobstoreStorage.getLargeObjectId(getBlobId(), connection),
                     LargeObjectManager.READ);
         }
         return obj;
