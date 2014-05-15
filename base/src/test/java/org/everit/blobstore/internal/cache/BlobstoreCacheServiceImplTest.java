@@ -14,22 +14,6 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - Blobstore.  If not, see <http://www.gnu.org/licenses/>.
  */
-/**
- * This file is part of Everit - Blobstore Base.
- *
- * Everit - Blobstore Base is free software: you can redistribute it and/or modify
- * it under the terms of the GNU Lesser General Public License as published by
- * the Free Software Foundation, either version 3 of the License, or
- * (at your option) any later version.
- *
- * Everit - Blobstore Base is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
- * GNU Lesser General Public License for more details.
- *
- * You should have received a copy of the GNU Lesser General Public License
- * along with Everit - Blobstore Base.  If not, see <http://www.gnu.org/licenses/>.
- */
 package org.everit.blobstore.internal.cache;
 
 import java.util.ArrayList;
@@ -106,14 +90,14 @@ public class BlobstoreCacheServiceImplTest {
         List<CachedBlobPart> expectedList = Arrays.asList(new CachedBlobPart[] {
                 new CachedBlobPart(BLOB_ID, 700l, BlobstoreCacheTestUtil
                         .createData((byte) 1, 100)),
-                new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
-                        .createData((byte) 1, 224)),
-                new CachedBlobPart(BLOB_ID, 1024l, BlobstoreCacheTestUtil
-                        .createData((byte) 1, 76)),
-                new CachedBlobPart(BLOB_ID, 1100l, BlobstoreCacheTestUtil
-                        .createData((byte) 1, 100)),
-                new CachedBlobPart(BLOB_ID, 1200l, BlobstoreCacheTestUtil
-                        .createData((byte) 1, 50)) });
+                        new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
+                                .createData((byte) 1, 224)),
+                                new CachedBlobPart(BLOB_ID, 1024l, BlobstoreCacheTestUtil
+                                        .createData((byte) 1, 76)),
+                                        new CachedBlobPart(BLOB_ID, 1100l, BlobstoreCacheTestUtil
+                                                .createData((byte) 1, 100)),
+                                                new CachedBlobPart(BLOB_ID, 1200l, BlobstoreCacheTestUtil
+                                                        .createData((byte) 1, 50)) });
         List<CachedBlobPart> result = cacheService.getBlobParts(BLOB_ID, 700l,
                 550l);
         Assert.assertEquals(expectedList.size(), result.size());
@@ -126,14 +110,14 @@ public class BlobstoreCacheServiceImplTest {
         expectedList = Arrays.asList(new CachedBlobPart[] {
                 new CachedBlobPart(BLOB_ID, 700l, BlobstoreCacheTestUtil
                         .createData((byte) 1, 100)),
-                new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
-                        .createData((byte) 1, 224)),
-                new CachedBlobPart(BLOB_ID, 1024l, BlobstoreCacheTestUtil
-                        .createData((byte) 1, 76)),
-                new CachedBlobPart(BLOB_ID, 1100l, BlobstoreCacheTestUtil
-                        .createData((byte) 1, 100)),
-                new CachedBlobPart(BLOB_ID, 1200l, BlobstoreCacheTestUtil
-                        .createData((byte) 1, 100)) });
+                        new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
+                                .createData((byte) 1, 224)),
+                                new CachedBlobPart(BLOB_ID, 1024l, BlobstoreCacheTestUtil
+                                        .createData((byte) 1, 76)),
+                                        new CachedBlobPart(BLOB_ID, 1100l, BlobstoreCacheTestUtil
+                                                .createData((byte) 1, 100)),
+                                                new CachedBlobPart(BLOB_ID, 1200l, BlobstoreCacheTestUtil
+                                                        .createData((byte) 1, 100)) });
         result = cacheService.getBlobParts(BLOB_ID, 700l, 640l);
         Assert.assertEquals(expectedList.size(), result.size());
         idx = 0;
@@ -145,8 +129,8 @@ public class BlobstoreCacheServiceImplTest {
         expectedList = Arrays.asList(new CachedBlobPart[] {
                 new CachedBlobPart(BLOB_ID, 700l, BlobstoreCacheTestUtil
                         .createData((byte) 1, 100)),
-                new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
-                        .createData((byte) 1, 120)) });
+                        new CachedBlobPart(BLOB_ID, 800l, BlobstoreCacheTestUtil
+                                .createData((byte) 1, 120)) });
         result = cacheService.getBlobParts(BLOB_ID, 700l, 220l);
         Assert.assertEquals(expectedList.size(), result.size());
         idx = 0;
