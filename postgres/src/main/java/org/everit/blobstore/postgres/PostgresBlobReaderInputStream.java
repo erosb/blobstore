@@ -19,8 +19,9 @@ package org.everit.blobstore.postgres;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Objects;
 
-import org.everit.blobstore.base.AbstractBlobReaderInputStream;
+import org.everit.blobstore.api.storage.BlobstoreStorageReader;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
 import org.slf4j.Logger;
@@ -29,7 +30,7 @@ import org.slf4j.LoggerFactory;
 /**
  * The {@link AbstractCachedInputStream} implementation for PostgreSQL database.
  */
-public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream {
+public class PostgresBlobReaderInputStream implements BlobstoreStorageReader {
     /**
      * Logger for this class.
      */
@@ -50,6 +51,8 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
      */
     private Integer totalSize = null;
 
+    private final Long blobId;
+
     /**
      * Constructor for the {@link AbstractCachedInputStream} implementation for PostgreSQL database.
      *
@@ -64,8 +67,8 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
      */
     public PostgresBlobReaderInputStream(final Connection connection, final Long blobId,
             final Long startPosition)
-                    throws SQLException {
-        super(blobId, startPosition);
+            throws SQLException {
+        this.blobId = Objects.requireNonNull(blobId, "blobId cannot be null");
         this.connection = connection;
         try {
             totalSize = getObj().size();
@@ -118,7 +121,7 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
     protected LargeObject getObj() throws SQLException {
         if (obj == null) {
             LargeObjectManager largeObjectAPI = PostgreSQLUtil.getPGConnection(connection).getLargeObjectAPI();
-            obj = largeObjectAPI.open(PostgresBlobstoreStorage.getLargeObjectId(getBlobId(), connection),
+            obj = largeObjectAPI.open(PostgresBlobstoreStorage.getLargeObjectId(blobId, connection),
                     LargeObjectManager.READ);
         }
         return obj;
@@ -136,7 +139,7 @@ public class PostgresBlobReaderInputStream extends AbstractBlobReaderInputStream
     }
 
     @Override
-    public byte[] readDataFromDb(final long startPosition, final int amount) throws SQLException {
+    public byte[] readDataFromStorage(final long startPosition, final int amount) throws SQLException {
         byte[] output = new byte[amount];
 
         LargeObject lObj = getObj();

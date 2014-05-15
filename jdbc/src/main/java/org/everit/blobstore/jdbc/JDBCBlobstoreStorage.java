@@ -24,21 +24,23 @@ import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
+import java.util.Objects;
 
 import javax.sql.DataSource;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.everit.blobstore.api.Blobstore;
 import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.api.BlobstoreStorage;
-import org.everit.blobstore.base.AbstractBlobReaderInputStream;
-import org.everit.blobstore.base.StreamUtil;
+import org.everit.blobstore.api.storage.BlobstoreStorage;
+import org.everit.blobstore.api.storage.BlobstoreStorageReader;
+import org.everit.blobstore.internal.StreamUtil;
 import org.everit.blobstore.internal.cache.BlobstoreCacheService;
 
 /**
- * JDBC specific implementation of {@link org.everit.blobstore.api.BlobstoreStorage}. This implementation handles a
- * cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
+ * JDBC specific implementation of {@link org.everit.blobstore.api.storage.BlobstoreStorage}. This implementation
+ * handles a cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
 @Component(name = "org.everit.blobstore.JDBCBlobstore")
 @Service
@@ -117,11 +119,10 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
     }
 
     @Override
-    public AbstractBlobReaderInputStream createInputStream(final BlobstoreCacheService cache,
+    public BlobstoreStorageReader createReader(final BlobstoreCacheService cache,
             final long blobId,
             final long startPosition) throws SQLException {
         JDBCBlobReaderInputStream rval = new JDBCBlobReaderInputStream(dataSource, blobId, startPosition);
-        rval.setCacheService(cache);
         return rval;
     }
 
@@ -179,7 +180,12 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
     }
 
     @Override
-    public long storeBlobNoParamCheck(final InputStream blobStream, final Long length, final String description) {
+    public long storeBlob(final InputStream blobStream, final Long length, final String description) {
+        Objects.requireNonNull(blobStream, "blobStream cannot be null");
+        if ((description != null) && (description.length() > Blobstore.BLOB_DESCRIPTION_MAX_LENGTH)) {
+            throw new BlobstoreException("description length must be at most " +
+                    Blobstore.BLOB_DESCRIPTION_MAX_LENGTH + ", actual length: " + description.length());
+        }
         Connection connection = null;
         OutputStream binaryStream = null;
         PreparedStatement preparedStatement = null;

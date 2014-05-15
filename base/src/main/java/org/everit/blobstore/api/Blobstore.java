@@ -1,4 +1,20 @@
 /**
+ * This file is part of Everit - Blobstore.
+ *
+ * Everit - Blobstore is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Everit - Blobstore is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Everit - Blobstore.  If not, see <http://www.gnu.org/licenses/>.
+ */
+/**
  * This file is part of Everit - Blobstore Base.
  *
  * Everit - Blobstore Base is free software: you can redistribute it and/or modify
@@ -51,9 +67,7 @@ public interface Blobstore {
      *            handled automatically. This encapsulation is necessary to be sure that the current transaction,
      *            connection and resultSet is opened until the end of reading of the inputStream.
      * @throws BlobstoreException
-     *             if a blob cannot be read due to one of the reasons: {@link ErrorCode#BLOB_DOES_NOT_EXIST},
-     *             {@link ErrorCode#TOO_HIGH_START_POSITION}, {@link ErrorCode#SQL_EXCEPTION},
-     *             {@link ErrorCode#IO_EXCEPTION}.
+     *             if a blob cannot be read due to one of the reasons
      */
     void readBlob(long blobId, long startPosition, BlobReader blobReader);
 
@@ -72,7 +86,7 @@ public interface Blobstore {
      *            The description may be any string with the maximum length 255.
      * @return The unique id of this blob.
      * @throws BlobstoreException
-     *             with the following reasons: {@link ErrorCode#TOO_LONG_DESCRIPTION}.
+     *             with the following reasons
      * @throws org.everit.util.core.validation.ValidationException
      *             if the blobStream parameter is null.
      */

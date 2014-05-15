@@ -30,33 +30,35 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - Blobstore Base.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.blobstore.api;
+package org.everit.blobstore.api.storage;
 
-/**
- * Exception class for Blobstore.
- */
-public class BlobstoreException extends RuntimeException {
+import java.io.IOException;
+import java.sql.SQLException;
+
+public interface BlobstoreStorageReader {
+
+    void close() throws IOException;
 
     /**
-     * Default serial UID.
+     * Get the total size of the blob.
+     *
+     * @return The total size of the blob.
+     * @throws SQLException
+     *             If the total size cannot be retrieved.
      */
-    private static final long serialVersionUID = 1L;
+    long getTotalSize() throws SQLException;
 
-    public BlobstoreException(final String message) {
-        super(message);
-    }
-
-    public BlobstoreException(final String message, final Throwable cause) {
-        super(message, cause);
-    }
-
-    public BlobstoreException(final String message, final Throwable cause, final boolean enableSuppression,
-            final boolean writableStackTrace) {
-        super(message, cause, enableSuppression, writableStackTrace);
-    }
-
-    public BlobstoreException(final Throwable cause) {
-        super(cause);
-    }
+    /**
+     * Read byte array of length amount from the database from the given offset from the database.
+     *
+     * @param startPosition
+     *            The offset from which the data is to be read.
+     * @param amount
+     *            Length of the array to be read.
+     * @return The read byte array.
+     * @throws SQLException
+     *             If a db error occurred.
+     */
+    byte[] readDataFromStorage(long startPosition, int amount) throws SQLException;
 
 }

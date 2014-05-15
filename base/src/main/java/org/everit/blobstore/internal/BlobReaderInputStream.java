@@ -1,4 +1,20 @@
 /**
+ * This file is part of Everit - Blobstore.
+ *
+ * Everit - Blobstore is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU Lesser General Public License as published by
+ * the Free Software Foundation, either version 3 of the License, or
+ * (at your option) any later version.
+ *
+ * Everit - Blobstore is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU Lesser General Public License for more details.
+ *
+ * You should have received a copy of the GNU Lesser General Public License
+ * along with Everit - Blobstore.  If not, see <http://www.gnu.org/licenses/>.
+ */
+/**
  * This file is part of Everit - Blobstore Base.
  *
  * Everit - Blobstore Base is free software: you can redistribute it and/or modify
@@ -14,7 +30,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - Blobstore Base.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.blobstore.base;
+package org.everit.blobstore.internal;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -22,6 +38,7 @@ import java.sql.SQLException;
 import java.util.Collections;
 import java.util.List;
 
+import org.everit.blobstore.api.storage.BlobstoreStorageReader;
 import org.everit.blobstore.internal.cache.BlobstoreCacheService;
 import org.everit.blobstore.internal.cache.CachedBlobPart;
 
@@ -29,7 +46,7 @@ import org.everit.blobstore.internal.cache.CachedBlobPart;
  * Abstract class that is the skeleton of the database-specific input streams that are used to retrieve blobs from the
  * database.
  */
-public abstract class AbstractBlobReaderInputStream extends InputStream {
+public class BlobReaderInputStream extends InputStream {
     /**
      * Integer that contains only bits with value one.
      */
@@ -38,6 +55,8 @@ public abstract class AbstractBlobReaderInputStream extends InputStream {
      * The current position of the reader.
      */
     private long currentPosition = 0;
+
+    private final BlobstoreStorageReader storageReader;
 
     /**
      * The id of the blob.
@@ -57,35 +76,29 @@ public abstract class AbstractBlobReaderInputStream extends InputStream {
      * @param startPosition
      *            the position where this stream should start.
      */
-    public AbstractBlobReaderInputStream(final Long blobId, final long startPosition) {
+    public BlobReaderInputStream(final Long blobId, final long startPosition, final BlobstoreStorageReader storageReader) {
         this.blobId = blobId;
         currentPosition = startPosition;
+        this.storageReader = storageReader;
     }
 
     @Override
     public int available() throws IOException {
         try {
-            return (int) (getTotalSize() - currentPosition);
+            return (int) (storageReader.getTotalSize() - currentPosition);
         } catch (SQLException e) {
             throw new IOException(e);
         }
     }
 
     @Override
-    public abstract void close() throws IOException;
-
-    protected Long getBlobId() {
-        return blobId;
+    public void close() throws IOException {
+        storageReader.close();
     }
 
-    /**
-     * Get the total size of the blob.
-     *
-     * @return The total size of the blob.
-     * @throws SQLException
-     *             If the total size cannot be retrieved.
-     */
-    public abstract long getTotalSize() throws SQLException;
+    public long getTotalSize() throws SQLException {
+        return storageReader.getTotalSize();
+    }
 
     @Override
     public final int read() throws IOException {
@@ -130,7 +143,7 @@ public abstract class AbstractBlobReaderInputStream extends InputStream {
 
             if ((currentBlobPartIndex < cachedBlobPartsArray.length)
                     && ((currentPosition + readBytes)
-                            == cachedBlobPartsArray[currentBlobPartIndex].getStartPosition())) {
+                        == cachedBlobPartsArray[currentBlobPartIndex].getStartPosition())) {
                 CachedBlobPart cachedBlobPart = cachedBlobPartsArray[currentBlobPartIndex];
                 byte[] blobPartData = cachedBlobPart.getBlobPartData();
                 System.arraycopy(cachedBlobPart.getBlobPartData(), 0, buffer, off + readBytes, blobPartData.length);
@@ -145,7 +158,7 @@ public abstract class AbstractBlobReaderInputStream extends InputStream {
                 long dbReadStartPosition = currentPosition + readBytes;
                 byte[] bytesFromDB;
                 try {
-                    bytesFromDB = readDataFromDb(dbReadStartPosition, amountToRead);
+                    bytesFromDB = storageReader.readDataFromStorage(dbReadStartPosition, amountToRead);
                 } catch (SQLException e) {
                     throw new IOException(e);
                 }
@@ -156,19 +169,6 @@ public abstract class AbstractBlobReaderInputStream extends InputStream {
         currentPosition = currentPosition + readBytes;
         return readBytes;
     }
-
-    /**
-     * Read byte array of length amount from the database from the given offset from the database.
-     *
-     * @param startPosition
-     *            The offset from which the data is to be read.
-     * @param amount
-     *            Length of the array to be read.
-     * @return The read byte array.
-     * @throws SQLException
-     *             If a db error occurred.
-     */
-    public abstract byte[] readDataFromDb(long startPosition, int amount) throws SQLException;
 
     public void setCacheService(final BlobstoreCacheService cacheService) {
         this.cacheService = cacheService;

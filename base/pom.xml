@@ -1,6 +1,24 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
 
+    This file is part of Everit - Blobstore.
+
+    Everit - Blobstore is free software: you can redistribute it and/or modify
+    it under the terms of the GNU Lesser General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    Everit - Blobstore is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU Lesser General Public License for more details.
+
+    You should have received a copy of the GNU Lesser General Public License
+    along with Everit - Blobstore.  If not, see <http://www.gnu.org/licenses/>.
+
+-->
+<!--
+
     This file is part of Everit - Blobstore Base.
 
     Everit - Blobstore Base is free software: you can redistribute it and/or modify
@@ -25,7 +43,7 @@
 	<parent>
 		<groupId>org.everit.config</groupId>
 		<artifactId>org.everit.config.oss</artifactId>
-		<version>5.0.0</version>
+		<version>5.0.1</version>
 	</parent>
 
 	<groupId>org.everit.osgi</groupId>
@@ -33,8 +51,8 @@
 	<version>1.0.0</version>
 	<packaging>bundle</packaging>
 	
-	<name>Everit - Blobstore Base</name>
-	<description>Common classes between blobstore.postgres and blobstore</description>
+	<name>Everit - Blobstore</name>
+	<description>Common classes between blobstore.postgres and blobstore.jdbc</description>
 
 	<properties>
 		<projectpath>blobstore</projectpath>
@@ -91,7 +109,7 @@
 						<Import-Package>
 							*
 						</Import-Package>
-						<Export-Package>${project.artifactId}.api;version="1.0.0"</Export-Package>
+						<Export-Package>${project.artifactId}.api;version="1.0.0",${project.artifactId}.api.storage;version="1.0.0"</Export-Package>
 						<!-- <Export-Package> ${project.artifactId}.api;version="1.0.0", ${project.artifactId}.schema.qdsl;version="1.0.0" 
 							</Export-Package> <Provide-Capability> liquibase.schema;name=org.everit.osgi.resource;resource=/META-INF/liquibase/resource.liquibase.xml;lqmg.config.resource=/META-INF/liquibase/resource.lqmg.xml 
 							</Provide-Capability> -->

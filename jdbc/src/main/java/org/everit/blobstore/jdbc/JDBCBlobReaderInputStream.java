@@ -24,15 +24,16 @@ import java.sql.Connection;
 import java.sql.PreparedStatement;
 import java.sql.ResultSet;
 import java.sql.SQLException;
+import java.util.Objects;
 
 import javax.sql.DataSource;
 
 import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.base.AbstractBlobReaderInputStream;
-import org.everit.blobstore.base.StreamUtil;
+import org.everit.blobstore.api.storage.BlobstoreStorageReader;
+import org.everit.blobstore.internal.StreamUtil;
 import org.osgi.service.log.LogService;
 
-public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
+public class JDBCBlobReaderInputStream implements BlobstoreStorageReader {
     /**
      * Logger for this class.
      */
@@ -69,6 +70,8 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
      */
     private Long totalSize = null;
 
+    private final Long blobId;
+
     /**
      * Constructor for the {@link AbstractCachedInputStream} implementation for JDBC database.
      *
@@ -84,7 +87,7 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
     public JDBCBlobReaderInputStream(final DataSource dataSource, final Long blobId,
             final Long startPosition)
                     throws SQLException {
-        super(blobId, startPosition);
+        this.blobId = Objects.requireNonNull(blobId, "blobId cannot be null");
         this.connection = dataSource.getConnection();
         try {
             Blob lBlob = getBlob();
@@ -153,7 +156,6 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
             PreparedStatement preparedStatement = null;
             try {
                 preparedStatement = getConnection().prepareStatement(BLOB_SELECT_STATEMENT);
-                long blobId = getBlobId();
                 preparedStatement.setLong(1, blobId);
                 ResultSet rs = null;
                 try {
@@ -194,7 +196,7 @@ public class JDBCBlobReaderInputStream extends AbstractBlobReaderInputStream {
     }
 
     @Override
-    public byte[] readDataFromDb(final long startPosition, final int amount) throws SQLException {
+    public byte[] readDataFromStorage(final long startPosition, final int amount) throws SQLException {
         if (startPosition < currentDbStreamPosition) {
             throw new SQLException("Startposition [" + startPosition
                     + "] cannot be lower than the current position of the stream [" + currentDbStreamPosition + "]");
