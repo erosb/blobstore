@@ -28,9 +28,8 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
-import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.api.storage.BlobstoreStorageReader;
-import org.everit.blobstore.internal.StreamUtil;
+import org.everit.osgi.blobstore.api.BlobstoreException;
+import org.everit.osgi.blobstore.api.storage.BlobstoreStorageReader;
 import org.osgi.service.log.LogService;
 
 public class JDBCBlobReaderInputStream implements BlobstoreStorageReader {

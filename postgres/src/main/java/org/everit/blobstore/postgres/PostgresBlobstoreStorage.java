@@ -27,12 +27,11 @@ import java.util.Objects;
 import javax.sql.DataSource;
 
 import org.apache.felix.scr.annotations.Reference;
-import org.everit.blobstore.api.Blobstore;
-import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.api.storage.BlobstoreStorage;
-import org.everit.blobstore.api.storage.BlobstoreStorageReader;
-import org.everit.blobstore.internal.StreamUtil;
-import org.everit.blobstore.internal.cache.BlobstoreCacheService;
+import org.everit.osgi.blobstore.api.Blobstore;
+import org.everit.osgi.blobstore.api.BlobstoreException;
+import org.everit.osgi.blobstore.api.storage.BlobstoreStorage;
+import org.everit.osgi.blobstore.api.storage.BlobstoreStorageReader;
+import org.everit.osgi.blobstore.internal.StreamUtil;
 import org.osgi.service.log.LogService;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
@@ -170,7 +169,6 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
 
     @Override
     public BlobstoreStorageReader createReader(
-            final BlobstoreCacheService cache,
             final long blobId,
             final long startPosition) throws SQLException {
         PostgresBlobReaderInputStream rval = new PostgresBlobReaderInputStream(

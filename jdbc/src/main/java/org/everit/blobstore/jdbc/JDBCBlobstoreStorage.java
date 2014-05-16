@@ -29,20 +29,27 @@ import java.util.Objects;
 import javax.sql.DataSource;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
+import org.apache.felix.scr.annotations.Properties;
+import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.everit.blobstore.api.Blobstore;
-import org.everit.blobstore.api.BlobstoreException;
-import org.everit.blobstore.api.storage.BlobstoreStorage;
-import org.everit.blobstore.api.storage.BlobstoreStorageReader;
-import org.everit.blobstore.internal.StreamUtil;
-import org.everit.blobstore.internal.cache.BlobstoreCacheService;
+import org.everit.osgi.blobstore.api.Blobstore;
+import org.everit.osgi.blobstore.api.BlobstoreException;
+import org.everit.osgi.blobstore.api.storage.BlobstoreStorage;
+import org.everit.osgi.blobstore.api.storage.BlobstoreStorageReader;
 
 /**
- * JDBC specific implementation of {@link org.everit.blobstore.api.storage.BlobstoreStorage}. This implementation
+ * JDBC specific implementation of {@link org.everit.osgi.blobstore.api.storage.BlobstoreStorage}. This implementation
  * handles a cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
-@Component(name = "org.everit.blobstore.JDBCBlobstore")
+@Component(name = "org.everit.blobstore.JDBCBlobstoreStorage",
+        metatype = true, immediate = true,
+        policy = ConfigurationPolicy.REQUIRE,
+        configurationFactory = true)
+@Properties({
+        @Property(name = "dataSource.target")
+})
 @Service
 public class JDBCBlobstoreStorage implements BlobstoreStorage {
 
@@ -119,7 +126,7 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
     }
 
     @Override
-    public BlobstoreStorageReader createReader(final BlobstoreCacheService cache,
+    public BlobstoreStorageReader createReader(
             final long blobId,
             final long startPosition) throws SQLException {
         JDBCBlobReaderInputStream rval = new JDBCBlobReaderInputStream(dataSource, blobId, startPosition);
@@ -196,10 +203,6 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
             if (length == null) {
                 preparedStatement.setBinaryStream(1, blobStream);
             } else {
-                if (length.longValue() > StreamUtil.countBytesProcessed(blobStream, length.longValue(),
-                        DEFAULT_BUFFER_SIZE)) {
-                    throw new BlobstoreException("too short stream");
-                }
                 preparedStatement.setBinaryStream(1, blobStream, length);
             }
             preparedStatement.setString(2, description);
@@ -211,8 +214,6 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
             }
             return Long.valueOf(lastKey);
         } catch (SQLException e) {
-            throw new BlobstoreException(e);
-        } catch (IOException e) {
             throw new BlobstoreException(e);
         } finally {
             try {

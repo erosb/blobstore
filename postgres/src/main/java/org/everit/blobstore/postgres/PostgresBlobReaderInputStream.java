@@ -21,7 +21,7 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
 
-import org.everit.blobstore.api.storage.BlobstoreStorageReader;
+import org.everit.osgi.blobstore.api.storage.BlobstoreStorageReader;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
 import org.slf4j.Logger;

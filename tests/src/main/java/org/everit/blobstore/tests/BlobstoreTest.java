@@ -21,13 +21,15 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
-import org.everit.blobstore.api.Blobstore;
+import org.everit.osgi.blobstore.api.Blobstore;
 import org.everit.osgi.dev.testrunner.TestDuringDevelopment;
 import org.junit.Assert;
 import org.junit.Test;
 import org.osgi.service.log.LogService;
 
-@Component(name = "BlobstoreTest", immediate = true)
+@Component(name = "BlobstoreTest",
+        immediate = true,
+metatype = true)
 @Service(value = BlobstoreTest.class)
 @Properties({
     @Property(name = "eosgi.testEngine", value = "junit4"),
