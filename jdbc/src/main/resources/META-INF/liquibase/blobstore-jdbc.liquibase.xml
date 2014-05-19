@@ -26,7 +26,7 @@
         http://www.liquibase.org/xml/ns/dbchangelog-ext http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-ext.xsd">
         
         <changeSet id="1.0.0" author="everit">
-        	<createTable tableName="BS_BLOB">
+        	<createTable tableName="BS_JDBC_BLOB">
         		<column name="BLOB_ID" type="BIGINT" autoIncrement="true">
         			<constraints primaryKey="true" nullable="false"/>
         		</column>

@@ -28,6 +28,7 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
@@ -38,17 +39,19 @@ import org.everit.osgi.blobstore.api.Blobstore;
 import org.everit.osgi.blobstore.api.BlobstoreException;
 import org.everit.osgi.blobstore.api.storage.BlobstoreStorage;
 import org.everit.osgi.blobstore.api.storage.BlobstoreStorageReader;
+import org.everit.osgi.liquibase.component.LiquibaseService;
+import org.osgi.framework.BundleContext;
 
 /**
  * JDBC specific implementation of {@link org.everit.osgi.blobstore.api.storage.BlobstoreStorage}. This implementation
  * handles a cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
 @Component(name = "org.everit.blobstore.JDBCBlobstoreStorage",
-        metatype = true, immediate = true,
-        policy = ConfigurationPolicy.REQUIRE,
-        configurationFactory = true)
+metatype = true, immediate = true,
+policy = ConfigurationPolicy.REQUIRE,
+configurationFactory = true)
 @Properties({
-        @Property(name = "dataSource.target")
+    @Property(name = "dataSource.target")
 })
 @Service
 public class JDBCBlobstoreStorage implements BlobstoreStorage {
@@ -56,7 +59,7 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
     /**
      * Name of the table the blob is stored.
      */
-    public static final String TABLE_NAME = "BS_BLOB";
+    public static final String TABLE_NAME = "BS_JDBC_BLOB";
 
     /**
      * Name of the column the blob is stored.
@@ -95,8 +98,20 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
     @Reference
     private DataSource dataSource;
 
+    @Reference
+    private LiquibaseService liquibaseService;
+
+    @Activate
+    public void activate(final BundleContext ctx) {
+        liquibaseService.process(dataSource, ctx.getBundle(), "/META-INF/liquibase/blobstore-jdbc.liquibase.xml");
+    }
+
     public void bindDataSource(final DataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    public void bindLiquibaseService(final LiquibaseService liquibaseService) {
+        this.liquibaseService = liquibaseService;
     }
 
     /**
