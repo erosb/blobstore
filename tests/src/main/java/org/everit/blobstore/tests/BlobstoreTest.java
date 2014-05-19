@@ -16,24 +16,29 @@
  */
 package org.everit.blobstore.tests;
 
+import java.io.ByteArrayInputStream;
+import java.io.InputStream;
+import java.util.Arrays;
+
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
 import org.everit.osgi.blobstore.api.Blobstore;
+import org.everit.osgi.blobstore.api.BlobstoreException;
 import org.everit.osgi.dev.testrunner.TestDuringDevelopment;
 import org.junit.Assert;
 import org.junit.Test;
 import org.osgi.service.log.LogService;
 
 @Component(name = "BlobstoreTest",
-        immediate = true,
-metatype = true)
+immediate = true,
+        metatype = true)
 @Service(value = BlobstoreTest.class)
 @Properties({
-    @Property(name = "eosgi.testEngine", value = "junit4"),
-    @Property(name = "eosgi.testId", value = "blobstoreTest"),
+        @Property(name = "eosgi.testEngine", value = "junit4"),
+        @Property(name = "eosgi.testId", value = "blobstoreTest"),
 })
 public class BlobstoreTest {
 
@@ -59,12 +64,49 @@ public class BlobstoreTest {
         return log;
     }
 
+    private long storeBlobSupport(final int length, final byte constantByte) {
+        byte[] byteArray = new byte[length];
+        for (int i = 0; i < byteArray.length; i++) {
+            byteArray[i] = constantByte;
+        }
+        InputStream inputStream = new ByteArrayInputStream(byteArray);
+        return blobstore.storeBlob(inputStream, Long.valueOf(length), "");
+    }
+
     @Test
     @TestDuringDevelopment
     public void testBlobSize() {
-        Assert.assertNotNull(log);
-        Assert.assertNotNull(blobstore);
-        System.out.println("testBlobSize() running!");
+        final int length = 5000000;
+        final byte constantByte = 34;
+        long blobId = storeBlobSupport(length, constantByte);
+        long size = blobstore.getBlobSizeByBlobId(blobId);
+        Assert.assertEquals(length, size);
+    }
+
+    @Test
+    @TestDuringDevelopment
+    public void testNullInputStream() {
+        try {
+            blobstore.storeBlob(null, (long) 0, "");
+            Assert.fail("should have been thrown.");
+        } catch (NullPointerException e) {
+            Assert.assertEquals("blobStream cannot be null", e.getMessage());
+        }
+    }
+
+    @Test
+    @TestDuringDevelopment
+    public void testTooLongDescription() {
+        char[] tooLongDescriptionCharArray = new char[Blobstore.BLOB_DESCRIPTION_MAX_LENGTH + 1];
+        Arrays.fill(tooLongDescriptionCharArray, '1');
+        try {
+            blobstore.storeBlob(new DummyInputStream(0, 0), (long) 0,
+                    String.valueOf(tooLongDescriptionCharArray));
+            Assert.fail("storeBlob() did not throw exception for too long description");
+        } catch (BlobstoreException e) {
+            String expected = "description length must be at most 255, actual length: 256";
+            Assert.assertEquals(expected, e.getMessage());
+        }
     }
 
 }
