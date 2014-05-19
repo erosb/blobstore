@@ -60,7 +60,7 @@
 						<Bundle-SymbolicName>${project.artifactId}</Bundle-SymbolicName>
 						<Import-Package>*</Import-Package>
 						<Export-Package />
-						<EOSGi-TestNum>1</EOSGi-TestNum>
+						<EOSGi-TestNum>3</EOSGi-TestNum>
 					</instructions>
 				</configuration>
 			</plugin>
@@ -271,7 +271,7 @@
 		<dependency>
 			<groupId>org.everit.osgi</groupId>
 			<artifactId>org.everit.osgi.liquibase.datasource</artifactId>
-			<version>1.0.0</version>
+			<version>1.0.1</version>
 		</dependency>
 
 		<dependency>

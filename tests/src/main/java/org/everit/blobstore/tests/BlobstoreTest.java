@@ -21,6 +21,7 @@ import java.io.InputStream;
 import java.util.Arrays;
 
 import org.apache.felix.scr.annotations.Component;
+import org.apache.felix.scr.annotations.ConfigurationPolicy;
 import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
@@ -33,8 +34,10 @@ import org.junit.Test;
 import org.osgi.service.log.LogService;
 
 @Component(name = "BlobstoreTest",
-immediate = true,
-        metatype = true)
+        immediate = true,
+        metatype = true,
+        policy = ConfigurationPolicy.REQUIRE,
+        configurationFactory = true)
 @Service(value = BlobstoreTest.class)
 @Properties({
         @Property(name = "eosgi.testEngine", value = "junit4"),

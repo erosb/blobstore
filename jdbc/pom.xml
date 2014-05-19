@@ -96,7 +96,7 @@
               ${project.artifactId}.schema.qdsl;version="1.0.0"
             </Export-Package> -->
             <Provide-Capability>
-              liquibase.schema;name=org.everit.osgi.blobstore;resource=/META-INF/liquibase/blobstore.liquibase.xml
+              liquibase.schema;name=org.everit.osgi.blobstore;resource=/META-INF/liquibase/blobstore-jdbc.liquibase.xml
             </Provide-Capability>
             <!-- ;lqmg.config.resource=/META-INF/liquibase/resource.lqmg.xml -->
           </instructions>
