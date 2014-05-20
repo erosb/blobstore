@@ -174,7 +174,8 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
         PostgresBlobReaderInputStream rval = new PostgresBlobReaderInputStream(
                 dataSource.getConnection(),
                 blobId,
-                startPosition
+                startPosition,
+                logger
                 );
         return rval;
     }

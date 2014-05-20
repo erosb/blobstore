@@ -106,7 +106,6 @@ public class JDBCBlobstoreStorageReader implements BlobstoreStorageReader {
 
     @Override
     public void close() throws IOException {
-        logger.log(LogService.LOG_INFO, "close() running");
         try {
             if (binaryStream != null) {
                 binaryStream.close();
@@ -153,7 +152,6 @@ public class JDBCBlobstoreStorageReader implements BlobstoreStorageReader {
      *             If a database error occurs.
      */
     public Blob getBlob() throws SQLException {
-        logger.log(LogService.LOG_INFO, "getBlob running");
         if (blob == null) {
             PreparedStatement preparedStatement = null;
             try {

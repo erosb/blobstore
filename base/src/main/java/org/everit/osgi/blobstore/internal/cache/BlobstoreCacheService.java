@@ -88,7 +88,7 @@ public class BlobstoreCacheService {
     }
 
     @Reference
-    private LogService LOGGER;
+    private LogService logger;
 
     private final ConcurrentMap<CacheKey, Fragment> cache;
 
@@ -339,7 +339,7 @@ public class BlobstoreCacheService {
     public void removePartsByBlobId(final long blobId) {
         for (CacheKey key : keyCache.get(blobId)) {
             if (cache.remove(key) == null) {
-                LOGGER.log(LogService.LOG_WARNING, "inconsistent cache state: " + key
+                logger.log(LogService.LOG_WARNING, "inconsistent cache state: " + key
                         + " exists in keyCache but not found in fragment cache");
             }
         }

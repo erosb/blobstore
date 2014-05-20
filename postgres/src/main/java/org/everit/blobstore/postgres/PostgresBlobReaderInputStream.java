@@ -22,20 +22,16 @@ import java.sql.SQLException;
 import java.util.Objects;
 
 import org.everit.osgi.blobstore.api.storage.BlobstoreStorageReader;
+import org.osgi.service.log.LogService;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 
 /**
  * The {@link AbstractCachedInputStream} implementation for PostgreSQL database.
  */
 public class PostgresBlobReaderInputStream implements BlobstoreStorageReader {
-    /**
-     * Logger for this class.
-     */
-    protected static final Logger LOGGER = LoggerFactory.getLogger(PostgresBlobReaderInputStream.class);
 
+    private final LogService logger;
     /**
      * Currently opened connection to the database.
      */
@@ -66,8 +62,9 @@ public class PostgresBlobReaderInputStream implements BlobstoreStorageReader {
      *             If the db cannot be accessed.
      */
     public PostgresBlobReaderInputStream(final Connection connection, final Long blobId,
-            final Long startPosition)
-            throws SQLException {
+            final Long startPosition, final LogService logger)
+                    throws SQLException {
+        this.logger = Objects.requireNonNull(logger, "logger cannot be null");
         this.blobId = Objects.requireNonNull(blobId, "blobId cannot be null");
         this.connection = connection;
         try {
@@ -106,7 +103,7 @@ public class PostgresBlobReaderInputStream implements BlobstoreStorageReader {
         try {
             cleanUp(true, true);
         } catch (SQLException e) {
-            LOGGER.error("Error during cleaning up large object and connection from postgres", e);
+            logger.log(LogService.LOG_ERROR, "Error during cleaning up large object and connection from postgres", e);
             throw new IOException(e);
         }
     }
