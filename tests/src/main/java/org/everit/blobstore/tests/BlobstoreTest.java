@@ -17,6 +17,7 @@
 package org.everit.blobstore.tests;
 
 import java.io.ByteArrayInputStream;
+import java.io.IOException;
 import java.io.InputStream;
 import java.util.Arrays;
 
@@ -26,6 +27,7 @@ import org.apache.felix.scr.annotations.Properties;
 import org.apache.felix.scr.annotations.Property;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.Service;
+import org.everit.osgi.blobstore.api.BlobReader;
 import org.everit.osgi.blobstore.api.Blobstore;
 import org.everit.osgi.blobstore.api.BlobstoreException;
 import org.everit.osgi.dev.testrunner.TestDuringDevelopment;
@@ -84,6 +86,35 @@ public class BlobstoreTest {
         long blobId = storeBlobSupport(length, constantByte);
         long size = blobstore.getBlobSizeByBlobId(blobId);
         Assert.assertEquals(length, size);
+    }
+
+    @Test
+    @TestDuringDevelopment
+    public void testBlobstoreService() {
+        final int dummyStreamLength = 500;
+        final int dummyStreamStartingPoint = 5;
+        final int readingBlobStartinPoint = 490;
+        DummyInputStream is = new DummyInputStream(dummyStreamLength, dummyStreamStartingPoint);
+        Long blobId = blobstore.storeBlob(is, null, "Dummy");
+        blobstore.readBlob(blobId, readingBlobStartinPoint, new BlobReader() {
+
+            @Override
+            public void readBlob(final InputStream blobStream) {
+                try {
+                    final int readingBlobShiftedStartingPoint = readingBlobStartinPoint
+                            + dummyStreamStartingPoint;
+                    Assert.assertTrue(DummyInputStream.couldBeFromDummyStream(blobStream,
+                            readingBlobShiftedStartingPoint));
+                } catch (IOException e) {
+                    throw new RuntimeException("Unexpected error during reading from blobStream", e);
+                }
+            }
+        });
+        String description = blobstore.getDescriptionByBlobId(blobId);
+        if (!"Dummy".equals(description)) {
+            Assert.fail("Description of blob is not the same as the one that was stored.");
+        }
+        blobstore.deleteBlob(blobId);
     }
 
     @Test

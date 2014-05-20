@@ -32,11 +32,11 @@ import org.everit.osgi.blobstore.api.BlobstoreException;
 import org.everit.osgi.blobstore.api.storage.BlobstoreStorageReader;
 import org.osgi.service.log.LogService;
 
-public class JDBCBlobReaderInputStream implements BlobstoreStorageReader {
+public class JDBCBlobstoreStorageReader implements BlobstoreStorageReader {
     /**
      * Logger for this class.
      */
-    protected LogService log;
+    protected LogService logger;
 
     /**
      * The statement which we can query a blob out from the database.
@@ -44,11 +44,8 @@ public class JDBCBlobReaderInputStream implements BlobstoreStorageReader {
     public static final String BLOB_SELECT_STATEMENT = "SELECT " + JDBCBlobstoreStorage.COLUMN_BLOB_DATA
             + " FROM "
             + JDBCBlobstoreStorage.TABLE_NAME + " WHERE " + JDBCBlobstoreStorage.COLUMN_BLOB_ID + "= ?";
-    /**
-     * The connection to the database.
-     */
-    private Connection connection;
 
+    private final DataSource dataSource;
     /**
      * The {@link InputStream} for the {@link Blob}.
      */
@@ -71,6 +68,8 @@ public class JDBCBlobReaderInputStream implements BlobstoreStorageReader {
 
     private final Long blobId;
 
+    private Connection connection;
+
     /**
      * Constructor for the {@link AbstractCachedInputStream} implementation for JDBC database.
      *
@@ -80,14 +79,16 @@ public class JDBCBlobReaderInputStream implements BlobstoreStorageReader {
      *            The id of the {@link Blob} to be read.
      * @param startPosition
      *            The offset at which the blob reading starts.
+     * @param logger
      * @throws SQLException
      *             If the db cannot be accessed.
      */
-    public JDBCBlobReaderInputStream(final DataSource dataSource, final Long blobId,
-            final Long startPosition)
+    public JDBCBlobstoreStorageReader(final DataSource dataSource, final Long blobId,
+            final Long startPosition, final LogService logger)
                     throws SQLException {
+        this.logger = Objects.requireNonNull(logger, "logger cannot be null");
         this.blobId = Objects.requireNonNull(blobId, "blobId cannot be null");
-        this.connection = dataSource.getConnection();
+        this.dataSource = Objects.requireNonNull(dataSource, "dataSource cannot be null");
         try {
             Blob lBlob = getBlob();
             if (lBlob == null) {
@@ -105,6 +106,7 @@ public class JDBCBlobReaderInputStream implements BlobstoreStorageReader {
 
     @Override
     public void close() throws IOException {
+        logger.log(LogService.LOG_INFO, "close() running");
         try {
             if (binaryStream != null) {
                 binaryStream.close();
@@ -151,6 +153,7 @@ public class JDBCBlobReaderInputStream implements BlobstoreStorageReader {
      *             If a database error occurs.
      */
     public Blob getBlob() throws SQLException {
+        logger.log(LogService.LOG_INFO, "getBlob running");
         if (blob == null) {
             PreparedStatement preparedStatement = null;
             try {
@@ -178,15 +181,15 @@ public class JDBCBlobReaderInputStream implements BlobstoreStorageReader {
         return blob;
     }
 
-    /**
-     * Getting a connection lazily.
-     *
-     * @return The database connection.
-     * @throws SQLException
-     *             if a database error occurs.
-     */
-    public Connection getConnection() throws SQLException {
-        return connection;
+    private Connection getConnection() {
+        try {
+            if (connection == null) {
+                connection = dataSource.getConnection();
+            }
+            return connection;
+        } catch (SQLException e) {
+            throw new BlobstoreException(e);
+        }
     }
 
     @Override

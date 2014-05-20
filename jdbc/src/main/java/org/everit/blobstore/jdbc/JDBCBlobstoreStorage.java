@@ -41,6 +41,7 @@ import org.everit.osgi.blobstore.api.storage.BlobstoreStorage;
 import org.everit.osgi.blobstore.api.storage.BlobstoreStorageReader;
 import org.everit.osgi.liquibase.component.LiquibaseService;
 import org.osgi.framework.BundleContext;
+import org.osgi.service.log.LogService;
 
 /**
  * JDBC specific implementation of {@link org.everit.osgi.blobstore.api.storage.BlobstoreStorage}. This implementation
@@ -101,6 +102,9 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
     @Reference
     private LiquibaseService liquibaseService;
 
+    @Reference
+    private LogService logger;
+
     @Activate
     public void activate(final BundleContext ctx) {
         liquibaseService.process(dataSource, ctx.getBundle(), "/META-INF/liquibase/blobstore-jdbc.liquibase.xml");
@@ -112,6 +116,10 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
 
     public void bindLiquibaseService(final LiquibaseService liquibaseService) {
         this.liquibaseService = liquibaseService;
+    }
+
+    public void bindLogger(final LogService logger) {
+        this.logger = logger;
     }
 
     /**
@@ -144,7 +152,7 @@ public class JDBCBlobstoreStorage implements BlobstoreStorage {
     public BlobstoreStorageReader createReader(
             final long blobId,
             final long startPosition) throws SQLException {
-        JDBCBlobReaderInputStream rval = new JDBCBlobReaderInputStream(dataSource, blobId, startPosition);
+        JDBCBlobstoreStorageReader rval = new JDBCBlobstoreStorageReader(dataSource, blobId, startPosition, logger);
         return rval;
     }
 
