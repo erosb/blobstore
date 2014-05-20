@@ -19,7 +19,13 @@ package org.everit.blobstore.tests;
 import java.io.ByteArrayInputStream;
 import java.io.IOException;
 import java.io.InputStream;
+import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Date;
+import java.util.List;
+import java.util.Random;
+import java.util.concurrent.atomic.AtomicInteger;
 
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.ConfigurationPolicy;
@@ -36,14 +42,14 @@ import org.junit.Test;
 import org.osgi.service.log.LogService;
 
 @Component(name = "BlobstoreTest",
-        immediate = true,
-        metatype = true,
-        policy = ConfigurationPolicy.REQUIRE,
-        configurationFactory = true)
+immediate = true,
+metatype = true,
+policy = ConfigurationPolicy.REQUIRE,
+configurationFactory = true)
 @Service(value = BlobstoreTest.class)
 @Properties({
-        @Property(name = "eosgi.testEngine", value = "junit4"),
-        @Property(name = "eosgi.testId", value = "blobstoreTest"),
+    @Property(name = "eosgi.testEngine", value = "junit4"),
+    @Property(name = "eosgi.testId", value = "blobstoreTest"),
 })
 public class BlobstoreTest {
 
@@ -52,6 +58,8 @@ public class BlobstoreTest {
 
     @Reference
     private Blobstore blobstore;
+
+    private final Object lock = new Object();
 
     public void bindBlobstore(final Blobstore blobstore) {
         this.blobstore = blobstore;
@@ -76,6 +84,90 @@ public class BlobstoreTest {
         }
         InputStream inputStream = new ByteArrayInputStream(byteArray);
         return blobstore.storeBlob(inputStream, Long.valueOf(length), "");
+    }
+
+    public void stressTestBlobstoreService() {
+        final int blobNum = 1000;
+        final int minBlobLength = 10000;
+        final int maxBlobLength = 300000;
+        final int readNum = 100000;
+        final int workerThreads = 5;
+        log.log(LogService.LOG_INFO, "Starting stress test with the following properties:\n"
+                + " Number of Blobs: " + blobNum + "\n Minimal blob length: " + minBlobLength
+                + "\n Maximal blob length: " + maxBlobLength + "\n Number of random reads: " + readNum);
+        final List<Long> blobIds = Collections.synchronizedList(new ArrayList<Long>());
+
+        Date blobCreationStart = new Date();
+        log.log(LogService.LOG_INFO, "Starting blob creation");
+
+        final AtomicInteger workingThreads = new AtomicInteger(workerThreads);
+        for (int t = 0; t < workerThreads; t++) {
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    final Random random = new Random();
+                    for (int i = 0, n = blobNum / workerThreads; i < n; i++) {
+                        Long blobId = blobstore.storeBlob(new DummyInputStream(Long.MAX_VALUE, 0),
+                                (long) (random.nextInt(maxBlobLength - minBlobLength) + minBlobLength), "Dummy");
+                        blobIds.add(blobId);
+                    }
+                    workingThreads.decrementAndGet();
+                    synchronized (lock) {
+                        lock.notify();
+                    }
+                }
+            }).start();
+        }
+        waitUntilThreadsAreFinished(workingThreads);
+        Date blobReadingStart = new Date();
+        log.log(LogService.LOG_INFO, "Blob creation took " + (blobReadingStart.getTime() - blobCreationStart.getTime())
+                + "ms");
+
+        workingThreads.set(workerThreads);
+
+        for (int t = 0; t < workerThreads; t++) {
+            new Thread(new Runnable() {
+
+                @Override
+                public void run() {
+                    final Random random = new Random();
+                    for (int i = 0, n = readNum / workerThreads; i < n; i++) {
+                        int blobIdIndex = random.nextInt(blobNum);
+                        Long blobId = blobIds.get(blobIdIndex);
+                        blobstore.readBlob(blobId, random.nextInt(minBlobLength), new BlobReader() {
+
+                            @Override
+                            public void readBlob(final InputStream blobStream) {
+                                try {
+                                    int available = blobStream.available();
+                                    int byteToReadNum = random.nextInt(available);
+                                    for (int j = 0; j < byteToReadNum; j++) {
+                                        blobStream.read();
+                                    }
+                                } catch (IOException e) {
+                                    throw new RuntimeException("Could not get available byte num from blob stream", e);
+                                }
+                            }
+                        });
+                    }
+                    workingThreads.decrementAndGet();
+                    synchronized (lock) {
+                        lock.notify();
+                    }
+                }
+            }).start();
+        }
+        waitUntilThreadsAreFinished(workingThreads);
+        Date blobDeletingStart = new Date();
+        log.log(LogService.LOG_INFO, "Blob reading took " + (blobDeletingStart.getTime() - blobReadingStart.getTime())
+                + "ms");
+        for (Long blobId : blobIds) {
+            blobstore.deleteBlob(blobId);
+        }
+        Date blobDeletingEnd = new Date();
+        log.log(LogService.LOG_INFO, "Blob deleting took " + (blobDeletingEnd.getTime() - blobDeletingStart.getTime())
+                + "ms");
     }
 
     @Test
@@ -130,6 +222,36 @@ public class BlobstoreTest {
 
     @Test
     @TestDuringDevelopment
+    public void testReadAfterWrite() {
+        final int length = 5000000;
+        final byte constantByte = 34;
+        long blobId = storeBlobSupport(length, constantByte);
+        blobstore.readBlob(blobId, 0, new BlobReader() {
+            @Override
+            public void readBlob(final InputStream inputStream) {
+                try {
+                    for (int i = 0; i < length; i++) {
+                        int read = inputStream.read();
+                        if (read == -1) {
+                            Assert.fail("Unexpected end of stream, the index of the current byte is: " + i
+                                    + ", the length is " + length);
+                        }
+                        Assert.assertEquals(constantByte, read);
+                    }
+                    int read = inputStream.read();
+                    if (read != -1) {
+                        Assert.fail("inputStream end reached, the value should be -1");
+                    }
+                } catch (IOException e) {
+                    Assert.fail("Can not read from inputStream");
+                    throw new RuntimeException("Cannot read from inputStream", e);
+                }
+            }
+        });
+    }
+
+    @Test
+    @TestDuringDevelopment
     public void testTooLongDescription() {
         char[] tooLongDescriptionCharArray = new char[Blobstore.BLOB_DESCRIPTION_MAX_LENGTH + 1];
         Arrays.fill(tooLongDescriptionCharArray, '1');
@@ -140,6 +262,56 @@ public class BlobstoreTest {
         } catch (BlobstoreException e) {
             String expected = "description length must be at most 255, actual length: 256";
             Assert.assertEquals(expected, e.getMessage());
+        }
+    }
+
+    @Test
+    @TestDuringDevelopment
+    public void testUknownBlobId() {
+        final long blobIdThatDoesNotExist = 332322223;
+        String expectedExceptionMsg = "blob [" + blobIdThatDoesNotExist + "] does not exist";
+        try {
+            blobstore.readBlob(blobIdThatDoesNotExist, 0, new DummyBlobReader());
+            Assert.fail("ReadBlob should have failed with unknown blob id");
+        } catch (BlobstoreException e) {
+            Assert.assertEquals(expectedExceptionMsg, e.getMessage());
+        }
+        try {
+            blobstore.getDescriptionByBlobId(blobIdThatDoesNotExist);
+            Assert.fail("Getting description should have failed with unknown blob id");
+        } catch (BlobstoreException e) {
+            Assert.assertEquals(expectedExceptionMsg, e.getMessage());
+        }
+    }
+
+    @Test
+    @TestDuringDevelopment
+    public void testZeroLengthBlobAndBlobstoreTooHighExceptionBlob() {
+        DummyInputStream is = new DummyInputStream(0, 0);
+        Long blobId = blobstore.storeBlob(is, null, "Dummy");
+        try {
+            blobstore.readBlob(blobId, 1, new DummyBlobReader());
+            Assert.fail("Calling readBlob with higher startposition than the "
+                    + "size of the blob should have died with exception");
+        } catch (BlobstoreException e) {
+            log.log(LogService.LOG_INFO, e.getMessage());
+            Assert.assertEquals("startPosition(=1) cannot be higher than totalSize(=0) of blob #" + blobId,
+                    e.getMessage());
+        }
+        blobstore.deleteBlob(blobId);
+    }
+
+    private void waitUntilThreadsAreFinished(final AtomicInteger workingThreads) {
+        final int waitPeriodForRunningThreads = 100;
+        synchronized (lock) {
+            while (workingThreads.get() > 0) {
+                try {
+                    lock.wait(waitPeriodForRunningThreads);
+                } catch (InterruptedException e) {
+                    // TODO Auto-generated catch block
+                    e.printStackTrace();
+                }
+            }
         }
     }
 
