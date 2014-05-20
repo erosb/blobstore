@@ -93,9 +93,11 @@
 						<Import-Package>
 							*
 						</Import-Package>
+						<Provide-Capability>
+							liquibase.schema;name=org.everit.osgi.blobstore.postgres;resource=/META-INF/liquibase/blobstore-postgres.liquibase.xml
+						</Provide-Capability>
 						<!-- <Export-Package> ${project.artifactId}.api;version="1.0.0", ${project.artifactId}.schema.qdsl;version="1.0.0" 
-							</Export-Package> <Provide-Capability> liquibase.schema;name=org.everit.osgi.resource;resource=/META-INF/liquibase/resource.liquibase.xml;lqmg.config.resource=/META-INF/liquibase/resource.lqmg.xml 
-							</Provide-Capability> -->
+							</Export-Package> -->
 					</instructions>
 				</configuration>
 			</plugin>
