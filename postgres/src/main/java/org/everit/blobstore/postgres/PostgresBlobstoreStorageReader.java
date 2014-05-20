@@ -29,7 +29,7 @@ import org.postgresql.largeobject.LargeObjectManager;
 /**
  * The {@link AbstractCachedInputStream} implementation for PostgreSQL database.
  */
-public class PostgresBlobReaderInputStream implements BlobstoreStorageReader {
+public class PostgresBlobstoreStorageReader implements BlobstoreStorageReader {
 
     private final LogService logger;
     /**
@@ -61,7 +61,7 @@ public class PostgresBlobReaderInputStream implements BlobstoreStorageReader {
      * @throws SQLException
      *             If the db cannot be accessed.
      */
-    public PostgresBlobReaderInputStream(final Connection connection, final Long blobId,
+    public PostgresBlobstoreStorageReader(final Connection connection, final Long blobId,
             final Long startPosition, final LogService logger)
                     throws SQLException {
         this.logger = Objects.requireNonNull(logger, "logger cannot be null");
@@ -84,7 +84,7 @@ public class PostgresBlobReaderInputStream implements BlobstoreStorageReader {
      * @throws SQLException
      *             if a database error occurs.
      */
-    protected void cleanUp(final boolean cleanObj, final boolean cleanConnection) throws SQLException {
+    private void cleanUp(final boolean cleanObj, final boolean cleanConnection) throws SQLException {
         try {
             if (cleanObj && (obj != null)) {
                 obj.close();

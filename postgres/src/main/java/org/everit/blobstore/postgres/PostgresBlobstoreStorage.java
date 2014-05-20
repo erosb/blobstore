@@ -45,7 +45,7 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
     /**
      * Name of the table the blob is stored.
      */
-    public static final String TABLE_NAME = "bs_blob";
+    public static final String TABLE_NAME = "bs_postgres_blob";
 
     /**
      * Name of the column that stores the large object id associated to this blob.
@@ -171,7 +171,7 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
     public BlobstoreStorageReader createReader(
             final long blobId,
             final long startPosition) throws SQLException {
-        PostgresBlobReaderInputStream rval = new PostgresBlobReaderInputStream(
+        PostgresBlobstoreStorageReader rval = new PostgresBlobstoreStorageReader(
                 dataSource.getConnection(),
                 blobId,
                 startPosition,

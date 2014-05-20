@@ -42,14 +42,14 @@ import org.junit.Test;
 import org.osgi.service.log.LogService;
 
 @Component(name = "BlobstoreTest",
-immediate = true,
-metatype = true,
-policy = ConfigurationPolicy.REQUIRE,
-configurationFactory = true)
+        immediate = true,
+        metatype = true,
+        policy = ConfigurationPolicy.REQUIRE,
+        configurationFactory = true)
 @Service(value = BlobstoreTest.class)
 @Properties({
-    @Property(name = "eosgi.testEngine", value = "junit4"),
-    @Property(name = "eosgi.testId", value = "blobstoreTest"),
+        @Property(name = "eosgi.testEngine", value = "junit4"),
+        @Property(name = "eosgi.testId", value = "blobstoreTest"),
 })
 public class BlobstoreTest {
 
@@ -294,7 +294,6 @@ public class BlobstoreTest {
             Assert.fail("Calling readBlob with higher startposition than the "
                     + "size of the blob should have died with exception");
         } catch (BlobstoreException e) {
-            log.log(LogService.LOG_INFO, e.getMessage());
             Assert.assertEquals("startPosition(=1) cannot be higher than totalSize(=0) of blob #" + blobId,
                     e.getMessage());
         }
