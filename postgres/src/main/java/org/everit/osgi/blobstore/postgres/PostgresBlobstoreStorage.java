@@ -48,11 +48,11 @@ import org.postgresql.largeobject.LargeObjectManager;
  * a cache based on {@link org.everit.blobstore.api.BlobstoreCacheService} if available.
  */
 @Component(name = "org.everit.blobstore.PostgresBlobstoreStorage",
-        metatype = true, immediate = true,
-        policy = ConfigurationPolicy.REQUIRE,
-        configurationFactory = true)
+metatype = true, immediate = true,
+policy = ConfigurationPolicy.REQUIRE,
+configurationFactory = true)
 @Properties({
-        @Property(name = "dataSource.target")
+    @Property(name = "dataSource.target")
 })
 @Service
 public class PostgresBlobstoreStorage implements BlobstoreStorage {
@@ -60,21 +60,21 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
     /**
      * Name of the table the blob is stored.
      */
-    public static final String TABLE_NAME = "bs_postgres_blob";
+    public static final String TABLE_NAME = "BS_POSTGRES_BLOB";
 
     /**
      * Name of the column that stores the large object id associated to this blob.
      */
-    public static final String COLUMN_LARGE_OBJECT_ID = "large_object_id";
+    public static final String COLUMN_LARGE_OBJECT_ID = "LARGE_OBJECT_ID";
     /**
      * Name of the column the blob is stored.
      */
-    public static final String COLUMN_BLOB_ID = "blob_id";
+    public static final String COLUMN_BLOB_ID = "BLOB_ID";
 
     /**
      * Name of the blob description column.
      */
-    public static final String COLUMN_DESCRIPTION = "blob_description";
+    public static final String COLUMN_DESCRIPTION = "BLOB_DESCRIPTION";
 
     /**
      * Name of the sequence where the blob ids will get value from.
@@ -90,8 +90,8 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
     /**
      * Insert statement which a new blob can be inserted into the blob table.
      */
-    public static final String SQL_INSERT_BLOB = "insert into " + TABLE_NAME + " (" + COLUMN_BLOB_ID + ", "
-            + COLUMN_LARGE_OBJECT_ID + ", " + COLUMN_DESCRIPTION + ") values (nextval('" + SEQUENCE_NAME + "'), ?, ?"
+    public static final String SQL_INSERT_BLOB = "insert into " + TABLE_NAME + " ("
+            + COLUMN_LARGE_OBJECT_ID + ", " + COLUMN_DESCRIPTION + ") values (?, ?"
             + ") returning " + COLUMN_BLOB_ID;
 
     /**
@@ -153,7 +153,13 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
 
     @Activate
     public void activate(final BundleContext ctx) {
-        liquibaseService.process(dataSource, ctx.getBundle(), "/META-INF/liquibase/blobstore-postgres.xml");
+        try {
+            dataSource.getConnection().setAutoCommit(false);
+            liquibaseService.process(dataSource, ctx.getBundle(),
+                    "/META-INF/liquibase/blobstore-postgres.liquibase.xml");
+        } catch (SQLException e) {
+            throw new BlobstoreException(e);
+        }
     }
 
     public void bindDataSource(final DataSource dataSource) {
@@ -321,7 +327,7 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
         LargeObject obj = null;
         try {
             connection = dataSource.getConnection();
-
+            connection.setAutoCommit(false);
             LargeObjectManager loManager = PostgreSQLUtil.getPGConnection(connection).getLargeObjectAPI();
             Long oid = loManager.createLO();
             obj = loManager.open(oid, LargeObjectManager.WRITE);
