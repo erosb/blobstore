@@ -21,6 +21,9 @@ import java.sql.Connection;
 import java.sql.SQLException;
 import java.util.Objects;
 
+import javax.sql.DataSource;
+
+import org.everit.osgi.blobstore.api.BlobstoreException;
 import org.everit.osgi.blobstore.api.storage.BlobstoreStorageReader;
 import org.osgi.service.log.LogService;
 import org.postgresql.largeobject.LargeObject;
@@ -49,6 +52,8 @@ public class PostgresBlobstoreStorageReader implements BlobstoreStorageReader {
 
     private final Long blobId;
 
+    private final DataSource dataSource;
+
     /**
      * Constructor for the {@link AbstractCachedInputStream} implementation for PostgreSQL database.
      *
@@ -61,12 +66,12 @@ public class PostgresBlobstoreStorageReader implements BlobstoreStorageReader {
      * @throws SQLException
      *             If the db cannot be accessed.
      */
-    public PostgresBlobstoreStorageReader(final Connection connection, final Long blobId,
+    public PostgresBlobstoreStorageReader(final DataSource dataSource, final Long blobId,
             final Long startPosition, final LogService logger)
-                    throws SQLException {
+            throws SQLException {
         this.logger = Objects.requireNonNull(logger, "logger cannot be null");
         this.blobId = Objects.requireNonNull(blobId, "blobId cannot be null");
-        this.connection = connection;
+        this.dataSource = Objects.requireNonNull(dataSource, "dataSource cannot be null");
         try {
             totalSize = getObj().size();
         } finally {
@@ -108,6 +113,16 @@ public class PostgresBlobstoreStorageReader implements BlobstoreStorageReader {
         }
     }
 
+    private Connection getConnection() {
+        try {
+            Connection rval = dataSource.getConnection();
+            rval.setAutoCommit(false);
+            return rval;
+        } catch (SQLException e) {
+            throw new BlobstoreException(e);
+        }
+    }
+
     /**
      * Lazily getting a large object based on the {@link #getLargeObjectId()}.
      *
@@ -117,6 +132,7 @@ public class PostgresBlobstoreStorageReader implements BlobstoreStorageReader {
      */
     protected LargeObject getObj() throws SQLException {
         if (obj == null) {
+            Connection connection = getConnection();
             LargeObjectManager largeObjectAPI = PostgreSQLUtil.getPGConnection(connection).getLargeObjectAPI();
             obj = largeObjectAPI.open(PostgresBlobstoreStorage.getLargeObjectId(blobId, connection),
                     LargeObjectManager.READ);

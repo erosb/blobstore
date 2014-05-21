@@ -205,7 +205,7 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
             final long blobId,
             final long startPosition) throws SQLException {
         PostgresBlobstoreStorageReader rval = new PostgresBlobstoreStorageReader(
-                dataSource.getConnection(),
+                dataSource,
                 blobId,
                 startPosition,
                 logger
@@ -336,7 +336,7 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
             if ((length != null) && (length.longValue() != bytesProcessed)) {
                 throw new BlobstoreException("too short stream");
             }
-
+            connection.setAutoCommit(true);
             return insertBlobIntoTable(oid, description, connection);
         } catch (SQLException e) {
             throw new BlobstoreException(e);
