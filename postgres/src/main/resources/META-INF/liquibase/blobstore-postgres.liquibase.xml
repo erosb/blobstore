@@ -27,7 +27,9 @@
         
         <changeSet id="1.0.0" author="everit">
         	<createTable tableName="BS_POSTGRES_BLOB">
-        		<column name="BLOB_ID" type="BIGINT" autoIncrement="true"></column>
+        		<column name="BLOB_ID" type="BIGINT" autoIncrement="true">
+        			<constraints primaryKey="true"/>
+        		</column>
         		<column name="LARGE_OBJECT_ID" type="BIGINT"></column>
         		<column name="BLOB_DESCRIPTION" type="VARCHAR(255)"></column>
         	</createTable>

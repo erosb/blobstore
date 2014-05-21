@@ -28,7 +28,7 @@
         <changeSet id="1.0.0" author="everit">
         	<createTable tableName="BS_JDBC_BLOB">
         		<column name="BLOB_ID" type="BIGINT" autoIncrement="true">
-        			<constraints primaryKey="true" nullable="false"/>
+        			<constraints primaryKey="true"/>
         		</column>
         		<column name="BLOB_DATA" type="BLOB"></column>
         		<column name="BLOB_DESCRIPTION" type="VARCHAR(255)"></column>

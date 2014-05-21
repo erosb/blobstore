@@ -175,6 +175,11 @@
 			<classifier>bundle_jta11</classifier>
 			<scope>provided</scope>
 		</dependency>
+		<dependency>
+			<groupId>org.everit.osgi</groupId>
+			<artifactId>org.everit.osgi.liquibase.component</artifactId>
+			<version>1.0.0</version>
+		</dependency>
 		<!-- QueryDSL and required dependency -->
 		<!-- <dependency> <groupId>com.mysema.querydsl</groupId> <artifactId>querydsl-sql</artifactId> 
 			<version>3.3.1</version> </dependency> <dependency> <groupId>org.apache.servicemix.bundles</groupId> 

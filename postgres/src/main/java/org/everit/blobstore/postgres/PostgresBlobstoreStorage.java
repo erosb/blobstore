@@ -26,12 +26,15 @@ import java.util.Objects;
 
 import javax.sql.DataSource;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Reference;
 import org.everit.osgi.blobstore.api.Blobstore;
 import org.everit.osgi.blobstore.api.BlobstoreException;
 import org.everit.osgi.blobstore.api.storage.BlobstoreStorage;
 import org.everit.osgi.blobstore.api.storage.BlobstoreStorageReader;
 import org.everit.osgi.blobstore.internal.StreamUtil;
+import org.everit.osgi.liquibase.component.LiquibaseService;
+import org.osgi.framework.BundleContext;
 import org.osgi.service.log.LogService;
 import org.postgresql.largeobject.LargeObject;
 import org.postgresql.largeobject.LargeObjectManager;
@@ -133,8 +136,20 @@ public class PostgresBlobstoreStorage implements BlobstoreStorage {
     @Reference
     private DataSource dataSource;
 
+    @Reference
+    private LiquibaseService liquibaseService;
+
+    @Activate
+    public void activate(final BundleContext ctx) {
+        liquibaseService.process(dataSource, ctx.getBundle(), "/META-INF/liquibase/blobstore-postgres.xml");
+    }
+
     public void bindDataSource(final DataSource dataSource) {
         this.dataSource = dataSource;
+    }
+
+    public void bindLiquibaseService(final LiquibaseService liquibaseService) {
+        this.liquibaseService = liquibaseService;
     }
 
     public void bindLogger(final LogService logger) {
