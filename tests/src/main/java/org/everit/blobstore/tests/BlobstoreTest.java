@@ -42,14 +42,15 @@ import org.junit.Test;
 import org.osgi.service.log.LogService;
 
 @Component(name = "BlobstoreTest",
-        immediate = true,
-        metatype = true,
-        policy = ConfigurationPolicy.REQUIRE,
-        configurationFactory = true)
+immediate = true,
+metatype = true,
+policy = ConfigurationPolicy.REQUIRE,
+configurationFactory = true)
 @Service(value = BlobstoreTest.class)
 @Properties({
-        @Property(name = "eosgi.testEngine", value = "junit4"),
-        @Property(name = "eosgi.testId", value = "blobstoreTest"),
+    @Property(name = "eosgi.testEngine", value = "junit4"),
+    @Property(name = "eosgi.testId", value = "blobstoreTest"),
+    @Property(name = "blobstore.target")
 })
 public class BlobstoreTest {
 
