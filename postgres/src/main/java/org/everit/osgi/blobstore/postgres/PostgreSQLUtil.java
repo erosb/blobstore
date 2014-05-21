@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - Blobstore Postgres.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.blobstore.postgres;
+package org.everit.osgi.blobstore.postgres;
 
 
 import java.sql.Connection;

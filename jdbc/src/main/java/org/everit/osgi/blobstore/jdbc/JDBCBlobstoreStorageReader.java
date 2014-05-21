@@ -14,7 +14,7 @@
  * You should have received a copy of the GNU Lesser General Public License
  * along with Everit - Blobstore JDBC.  If not, see <http://www.gnu.org/licenses/>.
  */
-package org.everit.blobstore.jdbc;
+package org.everit.osgi.blobstore.jdbc;
 
 import java.io.ByteArrayOutputStream;
 import java.io.IOException;
